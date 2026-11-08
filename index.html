@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador Virtual NT-IoT - Río Guatapurí</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js for Data Visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+        
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+        }
+
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Custom scrollbar for dark console */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #090d16;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #334155;
+        }
+
+        .led-indicator {
+            box-shadow: 0 0 10px currentColor;
+        }
+
+        .pulse-active {
+            animation: pulse-glow 1.5s infinite;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { opacity: 1; filter: drop-shadow(0 0 8px rgba(16, 185, 129, 0.8)); }
+            50% { opacity: 0.4; filter: drop-shadow(0 0 2px rgba(16, 185, 129, 0.2)); }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col bg-slate-950 text-slate-100 antialiased selection:bg-cyan-500 selection:text-slate-950">
+
+    <!-- Header / Navbar -->
+    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-50 px-4 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+            <div class="bg-gradient-to-tr from-cyan-500 to-blue-600 p-2.5 rounded-xl shadow-lg shadow-cyan-500/20">
+                <i class="fa-solid fa-microchip text-xl text-slate-950"></i>
+            </div>
+            <div>
+                <h1 class="text-lg font-bold tracking-tight text-white flex items-center gap-2">
+                    Simulador Interactivo NT-IoT
+                    <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-cyan-950 text-cyan-400 border border-cyan-800/50">v4.2 Final</span>
+                </h1>
+                <p class="text-xs text-slate-400">Sistema de Telemetría Ambiental • Río Guatapurí (Valledupar, Cesar)</p>
+            </div>
+        </div>
+
+        <!-- Controls / Execution Buttons -->
+        <div class="flex items-center gap-2">
+            <button id="btnRunCycle" onclick="triggerMeasurementCycle()" class="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-bold rounded-lg text-xs sm:text-sm flex items-center gap-2 transition-all shadow-lg shadow-emerald-500/20 active:scale-95">
+                <i class="fa-solid fa-play"></i> Ejecutar Ciclo (15 min)
+            </button>
+            <button id="btnAutoLoop" onclick="toggleAutoLoop()" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold rounded-lg text-xs sm:text-sm flex items-center gap-2 transition-all">
+                <i class="fa-solid fa-arrows-rotate" id="loopIcon"></i> Simulación Continua
+            </button>
+            <button onclick="clearConsole()" class="px-3 py-2 bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white rounded-lg text-xs border border-slate-700/50 transition">
+                <i class="fa-solid fa-trash-can"></i> Limpiar Consola
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 p-4 lg:p-6 max-w-[1600px] w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- LEFT COLUMN: Physical Controls & Hardware View (5 Cols) -->
+        <div class="lg:col-span-5 flex flex-col gap-6">
+
+            <!-- Hardware Status Board -->
+            <div class="bg-slate-900 rounded-2xl border border-slate-800 p-5 shadow-xl">
+                <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-800">
+                    <h2 class="text-sm font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+                        <i class="fa-solid fa-circuit-board text-cyan-400"></i> Estado Hardware ESP32 & Power
+                    </h2>
+                    <span id="systemModeBadge" class="text-xs px-2.5 py-1 rounded-full font-mono bg-amber-950 text-amber-400 border border-amber-800/50">DEEP-SLEEP (150 µA)</span>
+                </div>
+
+                <!-- Interactive Hardware Layout -->
+                <div class="bg-slate-950 rounded-xl p-4 border border-slate-800/80 relative overflow-hidden">
+                    <div class="grid grid-cols-2 gap-4">
+                        <!-- ESP32 Processor -->
+                        <div class="bg-slate-900/90 border border-slate-700 p-3 rounded-lg flex flex-col justify-between">
+                            <div class="flex justify-between items-start">
+                                <span class="text-xs font-bold text-slate-400">SoC ESP32 (WROOM)</span>
+                                <div id="ledESP32" class="w-2.5 h-2.5 rounded-full bg-slate-700 text-slate-700 led-indicator transition-all"></div>
+                            </div>
+                            <div class="mt-3">
+                                <div class="text-[10px] text-slate-500 font-mono">Frecuencia: <span class="text-slate-300">80 MHz (Bajo Consumo)</span></div>
+                                <div class="text-[10px] text-slate-500 font-mono">ADC1 (12 bits): <span id="adcVoltageText" class="text-cyan-400">0.00 V</span></div>
+                            </div>
+                        </div>
+
+                        <!-- MOSFET Switch & Power Rail -->
+                        <div class="bg-slate-900/90 border border-slate-700 p-3 rounded-lg flex flex-col justify-between">
+                            <div class="flex justify-between items-start">
+                                <span class="text-xs font-bold text-slate-400">MOSFET P-Channel (GPIO 23)</span>
+                                <div id="ledMosfet" class="w-2.5 h-2.5 rounded-full bg-red-950 text-red-700 led-indicator transition-all"></div>
+                            </div>
+                            <div class="mt-3">
+                                <div class="text-[10px] text-slate-500 font-mono">Estado Riel: <span id="mosfetRailText" class="text-red-400 font-bold">DESENERGIZADO (0V)</span></div>
+                                <div class="text-[10px] text-slate-500 font-mono">Protección: <span class="text-emerald-400">Anti-Electrólisis</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sensor Modules Visual -->
+                    <div class="mt-4 pt-3 border-t border-slate-800/80 grid grid-cols-3 gap-2 text-center text-xs">
+                        <div class="bg-slate-900 p-2 rounded-lg border border-slate-800">
+                            <span class="block text-[10px] text-slate-400 mb-1">Sensor pH</span>
+                            <span id="phRawBadge" class="font-mono text-cyan-400 font-bold">-- ADC</span>
+                        </div>
+                        <div class="bg-slate-900 p-2 rounded-lg border border-slate-800">
+                            <span class="block text-[10px] text-slate-400 mb-1">Sensor Turbidez</span>
+                            <span id="turbRawBadge" class="font-mono text-cyan-400 font-bold">-- ADC</span>
+                        </div>
+                        <div class="bg-slate-900 p-2 rounded-lg border border-slate-800">
+                            <span class="block text-[10px] text-slate-400 mb-1">Radio SX1276</span>
+                            <span id="loraBadge" class="font-mono text-emerald-400 font-bold">915 MHz</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Río Guatapurí Condition Controls (Inyección de Variables) -->
+            <div class="bg-slate-900 rounded-2xl border border-slate-800 p-5 shadow-xl">
+                <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-800">
+                    <h2 class="text-sm font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+                        <i class="fa-solid fa-water text-cyan-400"></i> Parámetros de Entrada (Balneario Hurtado)
+                    </h2>
+                    <span class="text-xs text-slate-500">Inyección de Señal Físico-Química</span>
+                </div>
+
+                <!-- Presets selection -->
+                <div class="mb-5 flex flex-wrap gap-2">
+                    <button onclick="applyPreset('clean')" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-emerald-900/50 rounded-lg text-xs font-semibold transition">
+                        🌊 Agua Limpia / Normal
+                    </button>
+                    <button onclick="applyPreset('runoff')" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-400 border border-amber-900/50 rounded-lg text-xs font-semibold transition">
+                        🌧️ Escorrentía Lluvia
+                    </button>
+                    <button onclick="applyPreset('flood')" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-rose-400 border border-rose-900/50 rounded-lg text-xs font-semibold transition">
+                        ⚠️ Creciente / Alta Turbidez
+                    </button>
+                </div>
+
+                <!-- Sliders -->
+                <div class="space-y-4">
+                    <!-- pH Slider -->
+                    <div>
+                        <div class="flex justify-between text-xs mb-1 font-semibold">
+                            <label for="sliderPH" class="text-slate-300">Potencial de Hidrógeno (pH)</label>
+                            <span id="valPH" class="font-mono text-cyan-400">7.00 pH</span>
+                        </div>
+                        <input type="range" id="sliderPH" min="5.5" max="9.0" step="0.05" value="7.00" oninput="updateControls()" class="w-full accent-cyan-500 bg-slate-800 rounded-lg h-2 cursor-pointer">
+                    </div>
+
+                    <!-- Turbidity Slider -->
+                    <div>
+                        <div class="flex justify-between text-xs mb-1 font-semibold">
+                            <label for="sliderTurb" class="text-slate-300">Turbidez del Agua (NTU)</label>
+                            <span id="valTurb" class="font-mono text-cyan-400">12.0 NTU</span>
+                        </div>
+                        <input type="range" id="sliderTurb" min="0" max="300" step="1" value="12" oninput="updateControls()" class="w-full accent-cyan-500 bg-slate-800 rounded-lg h-2 cursor-pointer">
+                    </div>
+
+                    <!-- Temperature Slider -->
+                    <div>
+                        <div class="flex justify-between text-xs mb-1 font-semibold">
+                            <label for="sliderTemp" class="text-slate-300">Temperatura del Río (°C)</label>
+                            <span id="valTemp" class="font-mono text-cyan-400">24.5 °C</span>
+                        </div>
+                        <input type="range" id="sliderTemp" min="15" max="35" step="0.5" value="24.5" oninput="updateControls()" class="w-full accent-cyan-500 bg-slate-800 rounded-lg h-2 cursor-pointer">
+                    </div>
+
+                    <!-- Distance to Gateway Slider -->
+                    <div>
+                        <div class="flex justify-between text-xs mb-1 font-semibold">
+                            <label for="sliderDist" class="text-slate-300">Distancia RF al Gateway LoRaWAN (km)</label>
+                            <span id="valDist" class="font-mono text-emerald-400">3.50 km</span>
+                        </div>
+                        <input type="range" id="sliderDist" min="0.5" max="12.0" step="0.25" value="3.5" oninput="updateControls()" class="w-full accent-emerald-500 bg-slate-800 rounded-lg h-2 cursor-pointer">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN: Console Output & Analytics Dashboard (7 Cols) -->
+        <div class="lg:col-span-7 flex flex-col gap-6">
+
+            <!-- Wokwi Style Serial Monitor -->
+            <div class="bg-slate-900 rounded-2xl border border-slate-800 shadow-2xl flex flex-col h-[340px] overflow-hidden">
+                <div class="bg-slate-950 px-4 py-2.5 border-b border-slate-800 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-rose-500/80 inline-block"></span>
+                        <span class="w-3 h-3 rounded-full bg-amber-500/80 inline-block"></span>
+                        <span class="w-3 h-3 rounded-full bg-emerald-500/80 inline-block"></span>
+                        <span class="ml-2 font-mono text-xs text-slate-400 font-semibold flex items-center gap-2">
+                            <i class="fa-solid fa-terminal text-cyan-400"></i> Consola Serial Monitor (ESP32 - 115200 baud)
+                        </span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <label class="text-[11px] text-slate-500 font-mono flex items-center gap-1.5">
+                            <input type="checkbox" id="chkAutoScroll" checked class="rounded bg-slate-800 border-slate-700 text-cyan-500"> Auto-scroll
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Serial Log Content -->
+                <div id="serialConsole" class="flex-1 p-4 font-mono text-xs leading-relaxed bg-[#050811] text-emerald-400 overflow-y-auto space-y-1">
+                    <div class="text-slate-600">// Sistema de Telemetría Río Guatapurí inicializado.</div>
+                    <div class="text-slate-600">// Haga clic en "Ejecutar Ciclo" para simular la secuencia de medición.</div>
+                </div>
+            </div>
+
+            <!-- Charts & Mathematical Deviations Dashboard -->
+            <div class="bg-slate-900 rounded-2xl border border-slate-800 p-5 shadow-xl flex-1">
+                <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-800">
+                    <h2 class="text-sm font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+                        <i class="fa-solid fa-chart-line text-cyan-400"></i> Métricas & Curva de Desvío Matemático
+                    </h2>
+                    <span class="text-xs font-mono text-cyan-400" id="lastErrorMetric">Error Relativo ADC: 0.00%</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Scatter Chart: Theoretical vs ADC Measured pH -->
+                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800/80 h-52">
+                        <canvas id="phChart"></canvas>
+                    </div>
+
+                    <!-- RF Link Margin & RSSI Chart -->
+                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800/80 h-52">
+                        <canvas id="rfChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-800/80 bg-slate-900/50 py-3 text-center text-xs text-slate-500">
+        <p>Nodo de Telemetría IoT (NT-IoT) • Proyecto UNAD - Monitoreo Ambiental Cuenca Río Guatapurí © 2026</p>
+    </footer>
+
+    <!-- JavaScript Simulator Engine -->
+    <script>
+        // State variables
+        let isRunning = false;
+        let autoLoopInterval = null;
+
+        // Theoretical presets
+        const presets = {
+            clean: { ph: 7.05, turb: 12, temp: 24.5, dist: 3.5 },
+            runoff: { ph: 6.75, turb: 85, temp: 23.0, dist: 3.5 },
+            flood: { ph: 7.45, turb: 220, temp: 22.5, dist: 5.0 }
+        };
+
+        // Charts references
+        let phChart, rfChart;
+
+        window.onload = function() {
+            initCharts();
+            updateControls();
+        };
+
+        function updateControls() {
+            document.getElementById('valPH').innerText = parseFloat(document.getElementById('sliderPH').value).toFixed(2) + ' pH';
+            document.getElementById('valTurb').innerText = parseFloat(document.getElementById('sliderTurb').value).toFixed(1) + ' NTU';
+            document.getElementById('valTemp').innerText = parseFloat(document.getElementById('sliderTemp').value).toFixed(1) + ' °C';
+            document.getElementById('valDist').innerText = parseFloat(document.getElementById('sliderDist').value).toFixed(2) + ' km';
+        }
+
+        function applyPreset(type) {
+            const p = presets[type];
+            if (p) {
+                document.getElementById('sliderPH').value = p.ph;
+                document.getElementById('sliderTurb').value = p.turb;
+                document.getElementById('sliderTemp').value = p.temp;
+                document.getElementById('sliderDist').value = p.dist;
+                updateControls();
+                logToConsole(`[PRESET] Aplicado escenario: ${type.toUpperCase()} en Río Guatapurí.`, 'text-cyan-400');
+            }
+        }
+
+        function logToConsole(msg, colorClass = 'text-emerald-400') {
+            const consoleEl = document.getElementById('serialConsole');
+            const entry = document.createElement('div');
+            entry.className = `${colorClass} font-mono`;
+            
+            const timestamp = new Date().toISOString().split('T')[1].slice(0, 12);
+            entry.innerText = `[${timestamp}] ${msg}`;
+            
+            consoleEl.appendChild(entry);
+            
+            if (document.getElementById('chkAutoScroll').checked) {
+                consoleEl.scrollTop = consoleEl.scrollHeight;
+            }
+        }
+
+        function clearConsole() {
+            document.getElementById('serialConsole').innerHTML = `<div class="text-slate-600">// Consola reiniciada por el usuario.</div>`;
+        }
+
+        const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+        async function triggerMeasurementCycle() {
+            if (isRunning) return;
+            isRunning = true;
+            document.getElementById('btnRunCycle').disabled = true;
+
+            const badgeMode = document.getElementById('systemModeBadge');
+            const ledESP32 = document.getElementById('ledESP32');
+            const ledMosfet = document.getElementById('ledMosfet');
+            const mosfetRailText = document.getElementById('mosfetRailText');
+            const adcVoltageText = document.getElementById('adcVoltageText');
+
+            // 1. ESP32 Wake Up
+            badgeMode.innerText = "MODO ACTIVO (120 mA)";
+            badgeMode.className = "text-xs px-2.5 py-1 rounded-full font-mono bg-emerald-950 text-emerald-400 border border-emerald-800/50";
+            
+            ledESP32.className = "w-2.5 h-2.5 rounded-full bg-emerald-500 led-indicator pulse-active transition-all";
+
+            logToConsole("----------------------------------------------------------------", "text-slate-600");
+            logToConsole("rst:0x5 (DEEPSLEEP_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)", "text-slate-500");
+            logToConsole("load:0x3fff0030,len:1156 | entry 0x400805dc", "text-slate-500");
+            logToConsole("--- NODO DE TELEMETRÍA NT-IoT INICIADO (RÍO GUATAPURÍ) ---", "text-cyan-300 font-bold");
+
+            await sleep(600);
+
+            // 2. MOSFET Switch ON
+            logToConsole("[PWR] Energizando sensores vía Transistor MOSFET (GPIO 23 = HIGH)...", "text-amber-400");
+            ledMosfet.className = "w-2.5 h-2.5 rounded-full bg-emerald-500 led-indicator transition-all";
+            mosfetRailText.innerText = "ENERGIZADO (3.3V)";
+            mosfetRailText.className = "text-emerald-400 font-bold";
+
+            logToConsole("[WAIT] Esperando 3.0 segundos para estabilización eléctrica de sondas...", "text-amber-300");
+            await sleep(1000);
+
+            // 3. Sensor Reading with Oversampling (16 samples)
+            const targetPH = parseFloat(document.getElementById('sliderPH').value);
+            const targetTurb = parseFloat(document.getElementById('sliderTurb').value);
+            const targetDist = parseFloat(document.getElementById('sliderDist').value);
+
+            logToConsole("[ADC] Iniciando rutina de sobremuestreo (16 muestras consecutivas)...", "text-cyan-400");
+
+            let sumADC_pH = 0;
+            let sumADC_Turb = 0;
+
+            for (let i = 1; i <= 16; i++) {
+                const noiseFactorPH = (Math.random() - 0.5) * 0.08;
+                const noiseFactorTurb = (Math.random() - 0.5) * 2.5;
+
+                const samplePH = targetPH + noiseFactorPH;
+                const sampleTurb = Math.max(0, targetTurb + noiseFactorTurb);
+
+                const vPH = 1.65 - (samplePH - 7.0) * 0.05916;
+                const adcPH = Math.round((vPH / 3.3) * 4095);
+
+                const vTurb = (sampleTurb / 150.0) * 3.3;
+                const adcTurb = Math.round((vTurb / 3.3) * 4095);
+
+                sumADC_pH += adcPH;
+                sumADC_Turb += adcTurb;
+                await sleep(30);
+            }
+
+            const rawPHAvg = sumADC_pH / 16;
+            const rawTurbAvg = sumADC_Turb / 16;
+
+            document.getElementById('phRawBadge').innerText = Math.round(rawPHAvg) + " ADC";
+            document.getElementById('turbRawBadge').innerText = Math.round(rawTurbAvg) + " ADC";
+
+            // 4. Power Off MOSFET immediately
+            logToConsole("[PWR] Desconectando MOSFET (GPIO 23 = LOW). Sensores apagados.", "text-amber-400");
+            ledMosfet.className = "w-2.5 h-2.5 rounded-full bg-red-950 text-red-700 led-indicator transition-all";
+            mosfetRailText.innerText = "DESENERGIZADO (0V)";
+            mosfetRailText.className = "text-red-400 font-bold";
+
+            // 5. Compute Calculated Values
+            const calcV_pH = (rawPHAvg * 3.3) / 4095.0;
+            adcVoltageText.innerText = calcV_pH.toFixed(3) + " V";
+            const calcPH = 7.0 + ((1.65 - calcV_pH) / 0.05916);
+            const calcTurb = (rawTurbAvg * 150.0) / 4095.0;
+
+            const errorPH = Math.abs((targetPH - calcPH) / targetPH) * 100;
+            document.getElementById('lastErrorMetric').innerText = `Error Relativo ADC: ${errorPH.toFixed(2)}%`;
+
+            logToConsole(`[MATH] pH Inyectado: ${targetPH.toFixed(2)} | pH Calculado: ${calcPH.toFixed(2)} (Error: ${errorPH.toFixed(2)}%)`, "text-cyan-300");
+            logToConsole(`[MATH] Turbidez Inyectada: ${targetTurb.toFixed(1)} NTU | Medida: ${calcTurb.toFixed(1)} NTU`, "text-cyan-300");
+
+            // 6. Calculate LoRa Link Budget (FSPL Equation)
+            const fspl = 20 * Math.log10(targetDist) + 20 * Math.log10(915) + 32.44;
+            const pTx = 14; 
+            const gTx = 2.0; 
+            const gRx = 3.0;
+            const noiseRF = (Math.random() - 0.5) * 3.0;
+            const rssi = pTx + gTx + gRx - fspl + noiseRF;
+            const linkMargin = rssi - (-132.0);
+
+            logToConsole(`[RF] LoRa 915 MHz -> Distancia: ${targetDist.toFixed(2)} km | FSPL: ${fspl.toFixed(1)} dB`, "text-emerald-300");
+            logToConsole(`[RF] RSSI Medido: ${rssi.toFixed(1)} dBm | Margen Enlace: +${linkMargin.toFixed(1)} dB`, "text-emerald-400 font-bold");
+
+            // 7. Binary Payload Formatting (10 Bytes)
+            logToConsole("[PAYLOAD] Empaquetando trama binaria compacta (10 Bytes):", "text-purple-300");
+            logToConsole(`  -> Trama Hex: [0x00 0x01] [0x${Math.round(calcPH*100).toString(16).toUpperCase()}] [0x${Math.round(calcTurb).toString(16).toUpperCase()}] [0x0992] [0x0F6E]`, "text-purple-400 font-mono");
+
+            await sleep(400);
+
+            // 8. Sleep Command
+            logToConsole("[SLEEP] Programando temporizador RTC para 895s...", "text-amber-300");
+            logToConsole("[SLEEP] Entrando en estado DEEP-SLEEP. Consumo -> 150 µA.", "text-amber-400 font-bold");
+
+            badgeMode.innerText = "DEEP-SLEEP (150 µA)";
+            badgeMode.className = "text-xs px-2.5 py-1 rounded-full font-mono bg-amber-950 text-amber-400 border border-amber-800/50";
+            ledESP32.className = "w-2.5 h-2.5 rounded-full bg-slate-700 text-slate-700 led-indicator transition-all";
+
+            updateChartData(targetPH, calcPH, targetDist, rssi);
+
+            isRunning = false;
+            document.getElementById('btnRunCycle').disabled = false;
+        }
+
+        function toggleAutoLoop() {
+            const icon = document.getElementById('loopIcon');
+            if (autoLoopInterval) {
+                clearInterval(autoLoopInterval);
+                autoLoopInterval = null;
+                icon.classList.remove('fa-spin');
+                logToConsole("[SIM] Simulación continua detenida.", "text-slate-400");
+            } else {
+                autoLoopInterval = setInterval(() => {
+                    if (!isRunning) triggerMeasurementCycle();
+                }, 6000);
+                icon.classList.add('fa-spin');
+                logToConsole("[SIM] Simulación continua activada (Ciclos automatizados).", "text-cyan-400");
+            }
+        }
+
+        function initCharts() {
+            // pH Chart
+            const ctxPH = document.getElementById('phChart').getContext('2d');
+            phChart = new Chart(ctxPH, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: 'pH Teórico',
+                            data: [],
+                            borderColor: '#38bdf8',
+                            borderDash: [5, 5],
+                            tension: 0.2
+                        },
+                        {
+                            label: 'pH Medido (ADC)',
+                            data: [],
+                            borderColor: '#10b981',
+                            backgroundColor: '#10b981',
+                            pointRadius: 4,
+                            tension: 0.2
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: { display: true, text: 'Evaluación pH: Teórico vs Medido', color: '#cbd5e1', font: { size: 11 } },
+                        legend: { labels: { color: '#94a3b8', font: { size: 9 } } }
+                    },
+                    scales: {
+                        x: { grid: { color: '#1e293b' }, ticks: { color: '#64748b', font: { size: 9 } } },
+                        y: { min: 5.5, max: 9.0, grid: { color: '#1e293b' }, ticks: { color: '#64748b', font: { size: 9 } } }
+                    }
+                }
+            });
+
+            // RF RSSI Chart
+            const ctxRF = document.getElementById('rfChart').getContext('2d');
+            rfChart = new Chart(ctxRF, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: 'RSSI Medido (dBm)',
+                            data: [],
+                            backgroundColor: '#06b6d4'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: { display: true, text: 'Potencia de Señal RF LoRaWAN (dBm)', color: '#cbd5e1', font: { size: 11 } },
+                        legend: { labels: { color: '#94a3b8', font: { size: 9 } } }
+                    },
+                    scales: {
+                        x: { grid: { color: '#1e293b' }, ticks: { color: '#64748b', font: { size: 9 } } },
+                        y: { min: -120, max: -60, grid: { color: '#1e293b' }, ticks: { color: '#64748b', font: { size: 9 } } }
+                    }
+                }
+            });
+        }
+
+        function updateChartData(targetPH, calcPH, targetDist, rssi) {
+            const timeLabel = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            
+            // Limit chart points to last 7 readings
+            if (phChart.data.labels.length > 7) {
+                phChart.data.labels.shift();
+                phChart.data.datasets[0].data.shift();
+                phChart.data.datasets[1].data.shift();
+
+                rfChart.data.labels.shift();
+                rfChart.data.datasets[0].data.shift();
+            }
+
+            phChart.data.labels.push(timeLabel);
+            phChart.data.datasets[0].data.push(targetPH);
+            phChart.data.datasets[1].data.push(calcPH);
+            phChart.update();
+
+            rfChart.data.labels.push(`${targetDist.toFixed(1)} km`);
+            rfChart.data.datasets[0].data.push(rssi);
+            rfChart.update();
+        }
+    </script>
+</body>
+</html>
