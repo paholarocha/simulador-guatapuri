@@ -567,6 +567,27 @@
     </form>
     <p id="mensajeEstado" style="margin-top: 10px; font-size: 14px;"></p>
 </div>
-    
+document.getElementById('formRegistro').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const nombre = document.getElementById('nombreUsuario').value;
+    const chatId = document.getElementById('telegramChatId').value;
+
+    const tokenBot = "TU_BOT_TOKEN";
+    const tuChatIdAdmin = "TU_CHAT_ID_ADMIN_PRINCIPAL"; 
+    const mensajeAdmin = "Solicitud IoT - Nombre: " + nombre + " | ChatID: " + chatId;
+
+    fetch("https://api.telegram.org/bot" + tokenBot + "/sendMessage?chat_id=" + tuChatIdAdmin + "&text=" + encodeURIComponent(mensajeAdmin))
+        .then(response => {
+            if(response.ok) {
+                document.getElementById('mensajeEstado').style.color = "#4ade80";
+                document.getElementById('mensajeEstado').innerText = "¡Solicitud enviada con éxito! Esperando autorización.";
+            } else {
+                document.getElementById('mensajeEstado').style.color = "#f87171";
+                document.getElementById('mensajeEstado').innerText = "Error al enviar la solicitud.";
+            }
+        });
+});
+
+   
 </body>
 </html>
