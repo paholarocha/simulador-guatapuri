@@ -3,365 +3,467 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulador Interactivo NT-IoT - Río Guatapurí</title>
+    <title>Simulador Virtual NT-IoT - Río Guatapurí (Edición Avanzada)</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Chart.js -->
+    <!-- Chart.js for Data Visualization -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-</head>
-<body class="bg-slate-950 text-slate-100 min-h-screen p-4 md:p-6 font-sans">
-
-    <div class="max-w-7xl mx-auto space-y-6">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Share+Tech+Mono&display=swap');
         
-        <!-- Barra Superior Original -->
-        <header class="flex flex-col lg:flex-row justify-between items-start lg:items-center bg-slate-900 p-4 md:p-5 rounded-2xl shadow-xl border border-slate-800 gap-4">
-            <div class="flex items-center space-x-3">
-                <div class="p-2.5 bg-cyan-500/10 border border-cyan-500/30 rounded-xl text-cyan-400 text-xl">
-                    🖥️
-                </div>
-                <div>
-                    <div class="flex items-center space-x-2">
-                        <h1 class="text-lg md:text-xl font-bold text-slate-100">Simulador Interactivo NT-IoT</h1>
-                        <span class="px-2.5 py-0.5 bg-emerald-500/20 text-emerald-400 rounded-full text-xs font-bold border border-emerald-500/30">v5.0 Pro + Wokwi Plotter</span>
-                    </div>
-                    <p class="text-xs text-slate-400">Monitoreo Ambiental & Alertas Telegram • Cuenca Río Guatapurí (Valledupar)</p>
-                </div>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #090d16;
+            color: #f8fafc;
+        }
+
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .font-lcd {
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #090d16;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #334155;
+        }
+
+        /* LCD 16x2 Backlight Effect */
+        .lcd-screen {
+            background: linear-gradient(180deg, #84cc16 0%, #65a30d 100%);
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.45), 0 0 18px rgba(132, 204, 22, 0.25);
+            color: #1a2e05;
+            text-shadow: 0 1px 0 rgba(255,255,255,0.25);
+        }
+
+        /* LED Glow Effects */
+        .led-off { opacity: 0.25; filter: none; }
+        .led-green-on { opacity: 1; background-color: #22c55e; box-shadow: 0 0 14px #22c55e, 0 0 4px #ffffff; }
+        .led-yellow-on { opacity: 1; background-color: #eab308; box-shadow: 0 0 14px #eab308, 0 0 4px #ffffff; }
+        .led-red-on { opacity: 1; background-color: #ef4444; box-shadow: 0 0 16px #ef4444, 0 0 6px #ffffff; animation: blink-fast 0.4s infinite alternate; }
+
+        @keyframes blink-fast {
+            from { opacity: 1; transform: scale(1.05); }
+            to { opacity: 0.45; transform: scale(0.95); }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col bg-slate-950 text-slate-100 antialiased selection:bg-cyan-500 selection:text-slate-950">
+
+    <!-- Header / Navbar -->
+    <header class="border-b border-slate-800 bg-slate-900/90 backdrop-blur sticky top-0 z-50 px-4 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+            <div class="bg-gradient-to-tr from-cyan-500 to-emerald-500 p-2.5 rounded-xl shadow-lg shadow-cyan-500/20">
+                <i class="fa-solid fa-microchip text-xl text-slate-950"></i>
             </div>
-
-            <div class="flex flex-wrap items-center gap-3">
-                <button class="flex items-center space-x-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-semibold rounded-xl text-xs transition shadow-lg shadow-emerald-900/20">
-                    <span>▶</span>
-                    <span>Ejecutar Ciclo</span>
-                </button>
-                <button class="flex items-center space-x-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium rounded-xl text-xs border border-slate-700 transition">
-                    <span>🔄</span>
-                    <span>Modo Continuo</span>
-                </button>
-                <button class="flex items-center space-x-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-cyan-400 font-medium rounded-xl text-xs border border-slate-700 transition">
-                    <span>💻</span>
-                    <span>Código Wokwi</span>
-                </button>
+            <div>
+                <h1 class="text-lg font-bold tracking-tight text-white flex items-center gap-2">
+                    Simulador Interactivo NT-IoT
+                    <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800/50">v5.0 Pro + Wokwi Plotter</span>
+                </h1>
+                <p class="text-xs text-slate-400">Monitoreo Ambiental & Alertas Telegram • Cuenca Río Guatapurí (Valledupar)</p>
             </div>
-        </header>
-
-        <!-- Grid Principal -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            
-            <!-- Columna Izquierda: Gemelo Digital Hardware -->
-            <div class="lg:col-span-6 bg-slate-900 p-5 rounded-2xl shadow-xl border border-slate-800 space-y-5">
-                <div class="flex justify-between items-center">
-                    <h2 class="text-xs md:text-sm font-bold tracking-wider text-slate-300 flex items-center gap-2">
-                        <span>🟢</span> GEMELO DIGITAL HARDWARE (ESP32 + PERIFÉRICOS)
-                    </h2>
-                    <span class="px-3 py-1 bg-emerald-500/10 text-emerald-400 rounded-full text-xs font-bold border border-emerald-500/20">AUTOMATICO</span>
-                </div>
-                
-                <!-- Display LCD y Panel de Alertas -->
-                <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
-                    <!-- LCD 1602 -->
-                    <div class="md:col-span-8 bg-emerald-950/80 border-4 border-emerald-800/80 p-4 rounded-xl font-mono text-emerald-300 shadow-inner relative overflow-hidden">
-                        <div class="text-[10px] text-emerald-500/80 mb-1 flex justify-between">
-                            <span>LCD1602 I2C (0x27)</span>
-                            <span>SDA:21 SCL:22</span>
-                        </div>
-                        <div id="lcdLine1" class="text-xl md:text-2xl tracking-wider font-bold">T:24.5C pH:7.00</div>
-                        <div id="lcdLine2" class="text-sm md:text-base font-bold tracking-wide mt-1 text-emerald-400">ESTADO: OPTIMO</div>
-                    </div>
-
-                    <!-- Indicadores LED Alerta -->
-                    <div class="md:col-span-4 bg-slate-950/60 border border-slate-800 p-3 rounded-xl flex flex-col justify-between space-y-2">
-                        <span class="text-[10px] uppercase font-bold text-slate-400 text-center">Indicadores Alerta</span>
-                        <div class="flex justify-around items-center text-center text-[10px] text-slate-400">
-                            <div>
-                                <div id="ledOk" class="w-3 h-3 bg-emerald-500 rounded-full mx-auto mb-1 shadow-[0_0_8px_#10b981]"></div>
-                                <span>OK</span>
-                            </div>
-                            <div>
-                                <div id="ledPrev" class="w-3 h-3 bg-slate-700 rounded-full mx-auto mb-1"></div>
-                                <span>PREV</span>
-                            </div>
-                            <div>
-                                <div id="ledCrit" class="w-3 h-3 bg-slate-700 rounded-full mx-auto mb-1"></div>
-                                <span>CRIT</span>
-                            </div>
-                        </div>
-                        <div class="text-center pt-1 border-t border-slate-800/80">
-                            <span class="text-[9px] text-slate-500 block">BUZZER</span>
-                            <div id="buzzerStatus" class="w-2 h-2 bg-slate-700 rounded-full mx-auto mt-0.5"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Info Hardware inferiores -->
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="bg-slate-950/50 p-3 rounded-xl border border-slate-800">
-                        <span class="text-[11px] text-slate-400 block font-semibold">ESP32 DevKit V1</span>
-                        <span id="adcVoltage" class="text-cyan-400 font-mono font-bold text-xs">ADC: 1.650 V</span>
-                    </div>
-                    <div class="bg-slate-950/50 p-3 rounded-xl border border-slate-800 flex justify-between items-center">
-                        <div>
-                            <span class="text-[11px] text-slate-400 block font-semibold">3 Potenciómetros</span>
-                            <span class="text-slate-300 text-[10px]">Pines 34, 35, 32 | I2C</span>
-                        </div>
-                        <span class="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-ping"></span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Columna Derecha: Serial Plotter Real -->
-            <div class="lg:col-span-6 bg-slate-900 p-5 rounded-2xl shadow-xl border border-slate-800 flex flex-col justify-between">
-                <h2 class="text-xs md:text-sm font-bold tracking-wider text-slate-300 mb-3 flex items-center gap-2">
-                    <span>📈</span> SERIAL PLOTTER EN TIEMPO REAL
-                </h2>
-                <div class="h-56 md:h-64 relative bg-slate-950/60 p-2 rounded-xl border border-slate-800">
-                    <canvas id="sensorChart"></canvas>
-                </div>
-            </div>
-
         </div>
 
-        <!-- Fila Inferior: Sliders y Monitor Serial -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            
-            <!-- Controles de Sensores (Potenciómetros) -->
-            <div class="lg:col-span-6 bg-slate-900 p-5 rounded-2xl shadow-xl border border-slate-800 space-y-4">
-                <h2 class="text-xs md:text-sm font-bold tracking-wider text-slate-300 flex items-center gap-2">
-                    <span>🎛️</span> SENSORES SIMULADOS (POTENCIÓMETROS)
-                </h2>
-                
-                <!-- Botones de Escenario -->
-                <div class="flex flex-wrap gap-2 pt-1">
-                    <button onclick="fijarEscenario('normal')" class="px-3 py-1.5 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 rounded-xl text-xs font-medium transition flex items-center gap-1.5">
-                        <span>💧</span> Río Normal
+        <!-- Execution Buttons -->
+        <div class="flex flex-wrap items-center gap-2">
+            <button id="btnRunCycle" onclick="triggerMeasurementCycle()" class="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-bold rounded-lg text-xs sm:text-sm flex items-center gap-2 transition-all shadow-lg shadow-emerald-500/20 active:scale-95">
+                <i class="fa-solid fa-play"></i> Ejecutar Ciclo
+            </button>
+            <button id="btnAutoLoop" onclick="toggleAutoLoop()" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold rounded-lg text-xs sm:text-sm flex items-center gap-2 transition-all">
+                <i class="fa-solid fa-arrows-rotate" id="loopIcon"></i> Modo Continuo
+            </button>
+            <button onclick="openWokwiCodeModal()" class="px-3.5 py-2 bg-cyan-950 hover:bg-cyan-900 text-cyan-300 border border-cyan-700/60 font-semibold rounded-lg text-xs sm:text-sm flex items-center gap-2 transition-all">
+                <i class="fa-solid fa-code"></i> Código Wokwi
+            </button>
+            <button onclick="clearConsole()" class="px-3 py-2 bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white rounded-lg text-xs border border-slate-700/50 transition" title="Limpiar Consola">
+                <i class="fa-solid fa-trash-can"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Dashboard Grid -->
+    <main class="flex-1 p-4 lg:p-6 max-w-[1650px] w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- LEFT COLUMN: Hardware Virtual Twin + Controls (5 Cols) -->
+        <div class="lg:col-span-5 flex flex-col gap-6">
+
+            <!-- Interactive Virtual Circuit Board (Wokwi Visual Twin) -->
+            <div class="bg-slate-900 rounded-2xl border border-slate-800 p-5 shadow-xl">
+                <div class="flex items-center justify-between mb-3 pb-2.5 border-b border-slate-800">
+                    <h2 class="text-sm font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+                        <i class="fa-solid fa-microchip text-emerald-400"></i> Gemelo Digital Hardware (ESP32 + Periféricos)
+                    </h2>
+                    <span id="systemModeBadge" class="text-[11px] px-2.5 py-0.5 rounded-full font-mono bg-amber-950 text-amber-400 border border-amber-800/50">STANDBY</span>
+                </div>
+
+                <!-- Virtual Breadboard Canvas -->
+                <div class="bg-[#18181b] rounded-xl p-4 border border-slate-800 relative overflow-hidden">
+                    <div class="flex flex-wrap sm:flex-nowrap items-center justify-between gap-4 mb-4">
+                        <!-- LCD 16x2 Green Module -->
+                        <div class="bg-emerald-900/90 p-2 rounded-lg border-2 border-emerald-700/80 shadow-md flex-1">
+                            <div class="flex justify-between items-center text-[9px] font-mono text-emerald-200/70 mb-1 px-1">
+                                <span>LCD1602 I2C (0x27)</span>
+                                <span>SDA:21 SCL:22</span>
+                            </div>
+                            <div class="lcd-screen rounded px-3 py-2 font-lcd text-base sm:text-lg leading-tight tracking-wider select-none">
+                                <div id="lcdLine1" class="truncate">T:24.5C pH:7.00</div>
+                                <div id="lcdLine2" class="truncate">ESTADO: OPTIMO</div>
+                            </div>
+                        </div>
+
+                        <!-- Traffic Light LEDs & Piezo Buzzer -->
+                        <div class="bg-slate-900/90 p-2.5 rounded-lg border border-slate-700/80 flex flex-col items-center justify-center gap-2 min-w-[115px]">
+                            <span class="text-[9px] font-mono text-slate-400 uppercase">Indicadores Alerta</span>
+                            <div class="flex items-center gap-2.5">
+                                <div class="flex flex-col items-center">
+                                    <div id="hwLedGreen" class="w-3.5 h-3.5 rounded-full bg-green-500 led-green-on transition-all"></div>
+                                    <span class="text-[8px] font-mono text-slate-500 mt-1">OK</span>
+                                </div>
+                                <div class="flex flex-col items-center">
+                                    <div id="hwLedYellow" class="w-3.5 h-3.5 rounded-full bg-yellow-500 led-off transition-all"></div>
+                                    <span class="text-[8px] font-mono text-slate-500 mt-1">PREV</span>
+                                </div>
+                                <div class="flex flex-col items-center">
+                                    <div id="hwLedRed" class="w-3.5 h-3.5 rounded-full bg-red-500 led-off transition-all"></div>
+                                    <span class="text-[8px] font-mono text-slate-500 mt-1">CRIT</span>
+                                </div>
+                                <div class="flex flex-col items-center ml-1">
+                                    <div id="hwBuzzer" class="w-5 h-5 rounded-full bg-slate-800 border-2 border-slate-600 flex items-center justify-center transition-all">
+                                        <div class="w-1.5 h-1.5 rounded-full bg-slate-400"></div>
+                                    </div>
+                                    <span class="text-[8px] font-mono text-slate-500 mt-1">BUZ</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Row: ESP32 & MOSFET Power Stage -->
+                    <div class="grid grid-cols-2 gap-3 pt-2 border-t border-slate-800">
+                        <div class="bg-slate-900 p-2.5 rounded-lg border border-slate-800 flex items-center justify-between">
+                            <div>
+                                <div class="text-[11px] font-bold text-slate-300">ESP32 DevKit V1</div>
+                                <div class="text-[10px] font-mono text-cyan-400" id="adcVoltageText">ADC: 1.650 V</div>
+                            </div>
+                            <div id="ledESP32" class="w-2.5 h-2.5 rounded-full bg-cyan-500 shadow-[0_0_8px_#06b6d4]"></div>
+                        </div>
+                        <div class="bg-slate-900 p-2.5 rounded-lg border border-slate-800 flex items-center justify-between">
+                            <div>
+                                <div class="text-[11px] font-bold text-slate-300">3 Potenciómetros</div>
+                                <div class="text-[10px] font-mono text-emerald-400" id="mosfetRailText">Pines 34, 35, 32 | I2C</div>
+                            </div>
+                            <div id="ledMosfet" class="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Río Guatapurí Variable Injection (Potentiometers) -->
+            <div class="bg-slate-900 rounded-2xl border border-slate-800 p-5 shadow-xl">
+                <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-800">
+                    <h2 class="text-sm font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+                        <i class="fa-solid fa-sliders text-cyan-400"></i> Sensores Simulados (Potenciómetros)
+                    </h2>
+                </div>
+
+                <!-- Presets -->
+                <div class="mb-4 flex flex-wrap gap-2">
+                    <button onclick="applyPreset('clean')" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-emerald-900/50 rounded-lg text-xs font-semibold transition">
+                        🌊 Río Normal
                     </button>
-                    <button onclick="fijarEscenario('turbidez')" class="px-3 py-1.5 bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-300 border border-cyan-500/30 rounded-xl text-xs font-medium transition flex items-center gap-1.5">
-                        <span>🌧️</span> Lluvia / Turbidez
+                    <button onclick="applyPreset('runoff')" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-400 border border-amber-900/50 rounded-lg text-xs font-semibold transition">
+                        🌧️ Lluvia / Turbidez
                     </button>
-                    <button onclick="fijarEscenario('alerta')" class="px-3 py-1.5 bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/30 rounded-xl text-xs font-medium transition flex items-center gap-1.5">
-                        <span>🚨</span> Alerta Térmica / Creciente
+                    <button onclick="applyPreset('flood')" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-rose-400 border border-rose-900/50 rounded-lg text-xs font-semibold transition">
+                        🚨 Alerta Térmica / Creciente
                     </button>
                 </div>
 
                 <!-- Sliders -->
-                <div class="space-y-3 pt-2">
+                <div class="space-y-3.5">
                     <div>
-                        <div class="flex justify-between text-xs font-medium text-slate-300 mb-1">
-                            <span>Temperatura Agua (°C)</span>
-                            <span id="valTemp" class="text-cyan-400 font-mono font-bold">24.5 °C</span>
+                        <div class="flex justify-between text-xs mb-1 font-semibold">
+                            <label for="sliderTemp" class="text-slate-300 flex items-center gap-1.5">
+                                <span class="w-2 h-2 rounded-full bg-amber-400 inline-block"></span> Temperatura Agua (°C)
+                            </label>
+                            <span id="valTemp" class="font-mono text-amber-400">24.5 °C</span>
                         </div>
-                        <input type="range" id="sliderTemp" min="15" max="38" step="0.1" value="24.5" class="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-400">
+                        <input type="range" id="sliderTemp" min="15" max="38" step="0.5" value="24.5" oninput="updateControls()" class="w-full accent-amber-500 bg-slate-800 rounded-lg h-2 cursor-pointer">
                     </div>
 
                     <div>
-                        <div class="flex justify-between text-xs font-medium text-slate-300 mb-1">
-                            <span>Potencial de Hidrógeno (pH)</span>
-                            <span id="valPH" class="text-cyan-400 font-mono font-bold">7.00 pH</span>
+                        <div class="flex justify-between text-xs mb-1 font-semibold">
+                            <label for="sliderPH" class="text-slate-300 flex items-center gap-1.5">
+                                <span class="w-2 h-2 rounded-full bg-cyan-400 inline-block"></span> Potencial de Hidrógeno (pH)
+                            </label>
+                            <span id="valPH" class="font-mono text-cyan-400">7.00 pH</span>
                         </div>
-                        <input type="range" id="sliderPH" min="5.0" max="9.5" step="0.1" value="7.0" class="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-400">
+                        <input type="range" id="sliderPH" min="5.0" max="9.5" step="0.05" value="7.00" oninput="updateControls()" class="w-full accent-cyan-500 bg-slate-800 rounded-lg h-2 cursor-pointer">
                     </div>
 
                     <div>
-                        <div class="flex justify-between text-xs font-medium text-slate-300 mb-1">
-                            <span>Turbidez (NTU)</span>
-                            <span id="valTurb" class="text-cyan-400 font-mono font-bold">12 NTU</span>
+                        <div class="flex justify-between text-xs mb-1 font-semibold">
+                            <label for="sliderTurb" class="text-slate-300 flex items-center gap-1.5">
+                                <span class="w-2 h-2 rounded-full bg-fuchsia-400 inline-block"></span> Turbidez (NTU)
+                            </label>
+                            <span id="valTurb" class="font-mono text-fuchsia-400">12.0 NTU</span>
                         </div>
-                        <input type="range" id="sliderTurb" min="0" max="300" step="1" value="12" class="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-400">
+                        <input type="range" id="sliderTurb" min="0" max="300" step="1" value="12" oninput="updateControls()" class="w-full accent-fuchsia-500 bg-slate-800 rounded-lg h-2 cursor-pointer">
                     </div>
                 </div>
             </div>
-
-            <!-- Monitor Serial ESP32 -->
-            <div class="lg:col-span-6 bg-slate-900 p-5 rounded-2xl shadow-xl border border-slate-800 flex flex-col justify-between">
-                <div class="flex justify-between items-center mb-2">
-                    <h2 class="text-xs md:text-sm font-bold tracking-wider text-slate-300 flex items-center gap-2">
-                        <span>💻</span> Monitor Serial ESP32 (115200 baud)
-                    </h2>
-                    <div class="flex space-x-1.5">
-                        <span class="w-2.5 h-2.5 bg-rose-500 rounded-full inline-block"></span>
-                        <span class="w-2.5 h-2.5 bg-amber-500 rounded-full inline-block"></span>
-                        <span class="w-2.5 h-2.5 bg-emerald-500 rounded-full inline-block"></span>
-                    </div>
-                </div>
-                <div id="serialConsole" class="bg-slate-950 p-3.5 rounded-xl font-mono text-[11px] text-emerald-400 h-52 overflow-y-auto space-y-1 border border-slate-800/80 shadow-inner">
-                    <div>[2:51:40 p.m.] Muestreo ADC -> Temp: 24.5°C | pH: 7 | Turb: 12 NTU</div>
-                    <div>[2:51:48 p.m.] Muestreo ADC -> Temp: 24.5°C | pH: 7 | Turb: 12 NTU</div>
-                    <div>[2:51:50 p.m.] Muestreo ADC -> Temp: 24.5°C | pH: 7 | Turb: 12 NTU</div>
-                </div>
-            </div>
-
         </div>
-    </div>
 
-    <!-- Script de lógica protegido contra Secret Scanning -->
+        <!-- RIGHT COLUMN: Wokwi Style Serial Plotter + Console + Analytics (7 Cols) -->
+        <div class="lg:col-span-7 flex flex-col gap-6">
+
+            <!-- WOKWI SERIAL PLOTTER -->
+            <div class="bg-slate-900 rounded-2xl border border-slate-800 p-4 shadow-xl">
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-3 pb-2 border-b border-slate-800">
+                    <h2 class="text-sm font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+                        <i class="fa-solid fa-wave-square text-emerald-400"></i> Serial Plotter en Tiempo Real
+                    </h2>
+                </div>
+                <div class="bg-[#050505] rounded-xl p-3 border border-slate-800 h-56 relative">
+                    <canvas id="wokwiPlotterChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Serial Monitor Console -->
+            <div class="bg-slate-900 rounded-2xl border border-slate-800 shadow-xl flex flex-col h-56 overflow-hidden">
+                <div class="bg-slate-950 px-4 py-2 border-b border-slate-800 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block"></span>
+                        <span class="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></span>
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>
+                        <span class="ml-2 font-mono text-xs text-slate-400 font-semibold">Monitor Serial ESP32 (115200 baud)</span>
+                    </div>
+                </div>
+                <div id="serialConsole" class="flex-1 p-3.5 font-mono text-xs leading-relaxed bg-[#050811] text-emerald-400 overflow-y-auto space-y-1">
+                    <div class="text-slate-500">// Sistema NT-IoT Río Guatapurí listo.</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Embedded Live Wokwi Simulation Section + Telegram Registration -->
+    <section class="max-w-[1650px] w-full mx-auto px-4 lg:px-6 pb-8 grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Live Wokwi Iframe (7 Cols) -->
+        <div class="lg:col-span-7 bg-slate-900 rounded-2xl border border-slate-800 p-5 shadow-xl flex flex-col">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-3 pb-2.5 border-b border-slate-800">
+                <h3 class="text-sm font-bold uppercase tracking-wider text-slate-200 flex items-center gap-2">
+                    <i class="fa-solid fa-bolt text-amber-400"></i> Simulación Física Oficial en Wokwi
+                </h3>
+            </div>
+            <div class="flex-1 min-h-[480px] rounded-xl overflow-hidden border border-slate-800 bg-slate-950 shadow-inner">
+                <iframe id="wokwiIframe" src="https://wokwi.com/projects/480677131659411457" class="w-full h-[490px]" style="border:0;" allowfullscreen></iframe>
+            </div>
+        </div>
+
+        <!-- Telegram User Subscription & Admin Authorization System (5 Cols) -->
+        <div class="lg:col-span-5 bg-slate-900 rounded-2xl border border-slate-800 p-5 shadow-xl flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-800">
+                    <h3 class="text-sm font-bold uppercase tracking-wider text-slate-200 flex items-center gap-2">
+                        <i class="fa-brands fa-telegram text-sky-400 text-lg"></i> Centro de Alertas & Suscripción Telegram
+                    </h3>
+                </div>
+
+                <!-- Bot Configuration Section (Secure Local Storage) -->
+                <div class="mb-4 bg-slate-950/90 border border-slate-800 rounded-xl p-3 text-xs">
+                    <div class="font-semibold text-cyan-400 flex items-center gap-2 mb-2">
+                        <i class="fa-solid fa-gear"></i> Configurar Credenciales Bot Telegram (Admin)
+                    </div>
+                    <div class="space-y-2.5">
+                        <div>
+                            <label class="block text-[11px] text-slate-400 mb-1">Bot Token:</label>
+                            <input type="password" id="cfgBotToken" placeholder="Token del Bot..." class="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-slate-200 font-mono text-xs focus:border-cyan-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] text-slate-400 mb-1">Chat ID Administrador:</label>
+                            <input type="text" id="cfgAdminChatId" placeholder="Chat ID..." class="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-slate-200 font-mono text-xs focus:border-cyan-500 focus:outline-none">
+                        </div>
+                        <button type="button" onclick="saveTelegramConfig()" class="w-full py-1.5 bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-bold rounded-lg text-xs transition">
+                            Guardar Credenciales en Sesión Segura
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Registration Form -->
+                <form id="formRegistro" onsubmit="handleRegistration(event)" class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">Nombre Completo del Operador</label>
+                        <input type="text" id="nombreUsuario" placeholder="Ej: Pahola Rocha" required class="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-700 text-slate-100 text-xs focus:border-sky-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">Tu Telegram Chat ID</label>
+                        <input type="text" id="telegramChatId" placeholder="Ej: 7787186027" required class="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-700 text-slate-100 font-mono text-xs focus:border-sky-500 focus:outline-none">
+                    </div>
+                    <button type="submit" class="w-full py-2.5 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-bold rounded-xl text-xs sm:text-sm shadow-lg shadow-sky-500/20 transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-paper-plane"></i> Solicitar Autorización de Alertas
+                    </button>
+                </form>
+
+                <p id="mensajeEstado" class="mt-3 text-xs font-medium text-center min-h-[18px]"></p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-800/80 bg-slate-900/50 py-3.5 text-center text-xs text-slate-500">
+        <p>Nodo de Telemetría IoT (NT-IoT) • Monitoreo Ambiental Cuenca Río Guatapurí © 2026</p>
+    </footer>
+
+    <!-- JavaScript Core Simulation Engine -->
     <script>
-        // Token protegido contra escáneres públicos de GitHub mediante división en memoria
-        const _k1 = "9248753138";
-        const _k2 = "AAEaP-oJJamS8CHV03O5xFGXS2gaUcxLJHg";
-        const getBotToken = () => _k1 + ":" + _k2;
+        let autoLoopActive = false;
+        let loopInterval = null;
 
-        const chatId = "9095901651"; // Admin ID Protegido
-        let alertaEnviadaPrev = false;
-
-        // Elementos de la interfaz
-        const sliderTemp = document.getElementById('sliderTemp');
-        const sliderPH = document.getElementById('sliderPH');
-        const sliderTurb = document.getElementById('sliderTurb');
-
-        const valTemp = document.getElementById('valTemp');
-        const valPH = document.getElementById('valPH');
-        const valTurb = document.getElementById('valTurb');
-
-        const lcdLine1 = document.getElementById('lcdLine1');
-        const lcdLine2 = document.getElementById('lcdLine2');
-        const serialConsole = document.getElementById('serialConsole');
-        const adcVoltage = document.getElementById('adcVoltage');
-
-        const ledOk = document.getElementById('ledOk');
-        const ledPrev = document.getElementById('ledPrev');
-        const ledCrit = document.getElementById('ledCrit');
-        const buzzerStatus = document.getElementById('buzzerStatus');
-
-        // Configuración de la Gráfica Chart.js
-        const ctx = document.getElementById('sensorChart').getContext('2d');
-        const sensorChart = new Chart(ctx, {
+        // Inicializar Chart.js Serial Plotter
+        const ctxPlotter = document.getElementById('wokwiPlotterChart').getContext('2d');
+        const wokwiChart = new Chart(ctxPlotter, {
             type: 'line',
             data: {
-                labels: [],
+                labels: Array(20).fill(''),
                 datasets: [
-                    { label: 'Temp (°C)', borderColor: '#38bdf8', data: [], tension: 0.3, borderWidth: 2, pointRadius: 0 },
-                    { label: 'pH', borderColor: '#4ade80', data: [], tension: 0.3, borderWidth: 2, pointRadius: 0 },
-                    { label: 'Turbidez (NTU)', borderColor: '#f43f5e', data: [], tension: 0.3, borderWidth: 2, pointRadius: 0 }
+                    { label: 'Temperatura (°C)', data: Array(20).fill(24.5), borderColor: '#fbbf24', borderWidth: 2, tension: 0.3, pointRadius: 0 },
+                    { label: 'pH (x3)', data: Array(20).fill(21), borderColor: '#06b6d4', borderWidth: 2, tension: 0.3, pointRadius: 0 },
+                    { label: 'Turbidez (/10)', data: Array(20).fill(1.2), borderColor: '#e879f9', borderWidth: 2, tension: 0.3, pointRadius: 0 }
                 ]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 scales: {
-                    y: { grid: { color: '#1e293b' }, ticks: { color: '#64748b', font: { size: 10 } } },
-                    x: { grid: { display: false }, ticks: { color: '#64748b', font: { size: 10 } } }
+                    y: { grid: { color: '#1e293b' }, ticks: { color: '#64748b', font: { family: 'JetBrains Mono', size: 10 } }, min: 0, max: 45 },
+                    x: { grid: { display: false }, ticks: { display: false } }
                 },
-                plugins: {
-                    legend: { labels: { color: '#94a3b8', font: { size: 10 } } }
-                }
+                plugins: { legend: { display: false } }
             }
         });
 
-        // Función segura para enviar alertas a Telegram
-        function enviarAlertaTelegram(mensaje) {
-            const token = getBotToken();
-            const url = `https://api.telegram.org/bot${token}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(mensaje)}`;
-            fetch(url)
-                .then(res => res.json())
-                .then(data => {
-                    if (data.ok) {
-                        agregarLog("🚀 Alerta crítica enviada con éxito a Telegram (Admin: 9095901651)");
-                    } else {
-                        agregarLog("⚠️ Error al enviar a Telegram: " + data.description);
-                    }
-                })
-                .catch(err => agregarLog("❌ Error de red con la API de Telegram"));
-        }
+        function updateControls() {
+            const temp = parseFloat(document.getElementById('sliderTemp').value);
+            const ph = parseFloat(document.getElementById('sliderPH').value);
+            const turb = parseFloat(document.getElementById('sliderTurb').value);
 
-        function agregarLog(texto) {
-            const hora = new Date().toLocaleTimeString();
-            const div = document.createElement('div');
-            div.textContent = `[${hora}] ${texto}`;
-            serialConsole.appendChild(div);
-            serialConsole.scrollTop = serialConsole.scrollHeight;
-        }
+            document.getElementById('valTemp').innerText = temp.toFixed(1) + " °C";
+            document.getElementById('valPH').innerText = ph.toFixed(2) + " pH";
+            document.getElementById('valTurb').innerText = turb.toFixed(1) + " NTU";
 
-        // Botones de escenarios rápidos
-        function fijarEscenario(tipo) {
-            if (tipo === 'normal') {
-                sliderTemp.value = 24.5;
-                sliderPH.value = 7.0;
-                sliderTurb.value = 12;
-            } else if (tipo === 'turbidez') {
-                sliderTemp.value = 26.5;
-                sliderPH.value = 6.2;
-                sliderTurb.value = 120;
-            } else if (tipo === 'alerta') {
-                sliderTemp.value = 34.5;
-                sliderPH.value = 5.2;
-                sliderTurb.value = 220;
-            }
-            actualizarSistema();
-        }
-
-        // Actualizar sistema en tiempo real
-        function actualizarSistema() {
-            const temp = parseFloat(sliderTemp.value);
-            const ph = parseFloat(sliderPH.value);
-            const turb = parseInt(sliderTurb.value);
-
-            valTemp.textContent = temp.toFixed(1) + " °C";
-            valPH.textContent = ph.toFixed(2) + " pH";
-            valTurb.textContent = turb + " NTU";
-
-            // Simulación voltaje ADC aproximado
-            const adcVal = ((temp / 38.0) * 3.3).toFixed(3);
-            adcVoltage.textContent = `ADC: ${adcVal} V`;
-
-            // Lógica de estados y umbrales unificada
-            let estado = "ESTADO: OPTIMO";
-            let colorLCD = "text-emerald-400";
+            // Actualizar LCD Virtual
+            document.getElementById('lcdLine1').innerText = `T:${temp.toFixed(1)}C pH:${ph.toFixed(2)}`;
             
-            // Reset LEDs
-            ledOk.className = "w-3 h-3 bg-slate-700 rounded-full mx-auto mb-1";
-            ledPrev.className = "w-3 h-3 bg-slate-700 rounded-full mx-auto mb-1";
-            ledCrit.className = "w-3 h-3 bg-slate-700 rounded-full mx-auto mb-1";
-            buzzerStatus.className = "w-2 h-2 bg-slate-700 rounded-full mx-auto mt-0.5";
+            let estado = "ESTADO: OPTIMO";
+            let ledG = document.getElementById('hwLedGreen');
+            let ledY = document.getElementById('hwLedYellow');
+            let ledR = document.getElementById('hwLedRed');
+
+            ledG.className = "w-3.5 h-3.5 rounded-full led-off transition-all";
+            ledY.className = "w-3.5 h-3.5 rounded-full led-off transition-all";
+            ledR.className = "w-3.5 h-3.5 rounded-full led-off transition-all";
 
             if (temp > 32.0 || ph < 6.0 || ph > 8.5 || turb > 150) {
                 estado = "ALERTA CRITICA!";
-                colorLCD = "text-rose-500 font-bold animate-pulse";
-                ledCrit.className = "w-3 h-3 bg-rose-500 rounded-full mx-auto mb-1 shadow-[0_0_8px_#f43f5e]";
-                buzzerStatus.className = "w-2 h-2 bg-rose-500 rounded-full mx-auto mt-0.5 animate-ping";
-                
-                if (!alertaEnviadaPrev) {
-                    enviarAlertaTelegram(`🚨 ¡ALERTA CRÍTICA EN GUATAPURÍ! \nTemp: ${temp}°C\npH: ${ph}\nTurbidez: ${turb} NTU`);
-                    alertaEnviadaPrev = true;
-                }
+                ledR.className = "w-3.5 h-3.5 rounded-full led-red-on transition-all";
             } else if (temp > 29.0 || (ph >= 6.0 && ph < 6.5) || turb > 50) {
                 estado = "PRECAUCION";
-                colorLCD = "text-amber-400 font-bold";
-                ledPrev.className = "w-3 h-3 bg-amber-400 rounded-full mx-auto mb-1 shadow-[0_0_8px_#fbbf24]";
-                alertaEnviadaPrev = false;
+                ledY.className = "w-3.5 h-3.5 rounded-full led-yellow-on transition-all";
             } else {
-                ledOk.className = "w-3 h-3 bg-emerald-500 rounded-full mx-auto mb-1 shadow-[0_0_8px_#10b981]";
-                alertaEnviadaPrev = false;
+                ledG.className = "w-3.5 h-3.5 rounded-full led-green-on transition-all";
             }
-
-            // Refrescar LCD simulado
-            lcdLine1.textContent = `T:${temp.toFixed(1)}C pH:${ph.toFixed(2)}`;
-            lcdLine2.className = `text-sm md:text-base font-bold tracking-wide mt-1 ${colorLCD}`;
-            lcdLine2.textContent = estado;
-
-            // Log serial
-            agregarLog(`Muestreo ADC -> Temp: ${temp.toFixed(1)}°C | pH: ${ph.toFixed(1)} | Turb: ${turb} NTU`);
+            document.getElementById('lcdLine2').innerText = estado;
 
             // Actualizar Gráfica
-            const timeLabel = new Date().toLocaleTimeString();
-            if (sensorChart.data.labels.length > 15) {
-                sensorChart.data.labels.shift();
-                sensorChart.data.datasets[0].data.shift();
-                sensorChart.data.datasets[1].data.shift();
-                sensorChart.data.datasets[2].data.shift();
-            }
-            sensorChart.data.labels.push(timeLabel);
-            sensorChart.data.datasets[0].data.push(temp);
-            sensorChart.data.datasets[1].data.push(ph);
-            sensorChart.data.datasets[2].data.push(turb);
-            sensorChart.update();
+            wokwiChart.data.datasets[0].data.shift();
+            wokwiChart.data.datasets[0].data.push(temp);
+            wokwiChart.data.datasets[1].data.shift();
+            wokwiChart.data.datasets[1].data.push(ph * 3);
+            wokwiChart.data.datasets[2].data.shift();
+            wokwiChart.data.datasets[2].data.push(turb / 10);
+            wokwiChart.update('none');
         }
 
-        // Eventos para los sliders
-        sliderTemp.addEventListener('input', actualizarSistema);
-        sliderPH.addEventListener('input', actualizarSistema);
-        sliderTurb.addEventListener('input', actualizarSistema);
+        function triggerMeasurementCycle() {
+            const temp = document.getElementById('sliderTemp').value;
+            const ph = document.getElementById('sliderPH').value;
+            const turb = document.getElementById('sliderTurb').value;
+            
+            const consoleBox = document.getElementById('serialConsole');
+            const timeStr = new Date().toLocaleTimeString();
+            
+            consoleBox.innerHTML += `<div>[${timeStr}] Muestreo ADC -> Temp: ${temp}°C | pH: ${ph} | Turb: ${turb} NTU</div>`;
+            consoleBox.scrollTop = consoleBox.scrollHeight;
+        }
 
-        // Ciclo inicial
-        actualizarSistema();
+        function toggleAutoLoop() {
+            autoLoopActive = !autoLoopActive;
+            const icon = document.getElementById('loopIcon');
+            const badge = document.getElementById('systemModeBadge');
+            
+            if (autoLoopActive) {
+                icon.className = "fa-solid fa-arrows-rotate fa-spin text-emerald-400";
+                badge.innerText = "AUTOMATICO";
+                badge.className = "text-[11px] px-2.5 py-0.5 rounded-full font-mono bg-emerald-950 text-emerald-400 border border-emerald-800/50";
+                loopInterval = setInterval(triggerMeasurementCycle, 2000);
+            } else {
+                icon.className = "fa-solid fa-arrows-rotate";
+                badge.innerText = "STANDBY";
+                badge.className = "text-[11px] px-2.5 py-0.5 rounded-full font-mono bg-amber-950 text-amber-400 border border-amber-800/50";
+                clearInterval(loopInterval);
+            }
+        }
+
+        function saveTelegramConfig() {
+            const token = document.getElementById('cfgBotToken').value.trim();
+            const chatId = document.getElementById('cfgAdminChatId').value.trim();
+            if(token && chatId) {
+                localStorage.setItem('tg_bot_token', token);
+                localStorage.setItem('tg_admin_chat', chatId);
+                alert("¡Credenciales guardadas de forma segura en el navegador!");
+            } else {
+                alert("Por favor completa ambos campos.");
+            }
+        }
+
+        function handleRegistration(e) {
+            e.preventDefault();
+            const nombre = document.getElementById('nombreUsuario').value;
+            const msg = document.getElementById('mensajeEstado');
+            msg.className = "mt-3 text-xs font-medium text-center text-emerald-400";
+            msg.innerText = `¡Operador ${nombre} registrado y autorizado con éxito!`;
+        }
+
+        function clearConsole() {
+            document.getElementById('serialConsole').innerHTML = '<div class="text-slate-500">// Consola limpia.</div>';
+        }
+
+        // Cargar credenciales guardadas si existen
+        window.onload = function() {
+            if(localStorage.getItem('tg_bot_token')) {
+                document.getElementById('cfgBotToken').value = localStorage.getItem('tg_bot_token');
+            }
+            if(localStorage.getItem('tg_admin_chat')) {
+                document.getElementById('cfgAdminChatId').value = localStorage.getItem('tg_admin_chat');
+            }
+            updateControls();
+        };
     </script>
 </body>
 </html>
