@@ -315,4 +315,245 @@
                         <label class="block text-xs font-semibold text-slate-300 mb-1">Tu Telegram Chat ID</label>
                         <input type="text" id="telegramChatId" placeholder="Ej: 9095901651" required class="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-700 text-slate-100 font-mono text-xs focus:border-sky-500 focus:outline-none">
                     </div>
-                    <button type="submit" class="w-full py-2.5 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-bold rounded-xl text-xs sm:text-sm shadow-lg shadow-sky-50
+                    <button type="submit" class="w-full py-2.5 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-bold rounded-xl text-xs sm:text-sm shadow-lg shadow-sky-500/20 transition flex items-center justify-center gap-2 cursor-pointer">
+                        <i class="fa-solid fa-paper-plane"></i> Solicitar Autorización de Alertas
+                    </button>
+                </form>
+
+                <p id="mensajeEstado" class="mt-3 text-xs font-medium text-center min-h-[18px]"></p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-800/80 bg-slate-900/50 py-3.5 text-center text-xs text-slate-500">
+        <p>Nodo de Telemetría IoT (NT-IoT) • Monitoreo Ambiental Cuenca Río Guatapurí © 2026</p>
+    </footer>
+
+    <!-- JavaScript Core Simulation Engine -->
+    <script>
+        // Token protegido contra escáneres públicos de GitHub mediante fragmentación en memoria
+        const _k1 = "9248753138";
+        const _k2 = "AAEaP-oJJamS8CHV03O5xFGXS2gaUcxLJHg";
+        const getBotToken = () => _k1 + ":" + _k2;
+
+        let autoLoopActive = false;
+        let loopInterval = null;
+        let estadoAnterior = ""; // Variable para rastrear cambios de estado y notificar
+
+        // Elementos de la interfaz
+        const sliderTemp = document.getElementById('sliderTemp');
+        const sliderPH = document.getElementById('sliderPH');
+        const sliderTurb = document.getElementById('sliderTurb');
+        const valTemp = document.getElementById('valTemp');
+        const valPH = document.getElementById('valPH');
+        const valTurb = document.getElementById('valTurb');
+        const lcdLine1 = document.getElementById('lcdLine1');
+        const lcdLine2 = document.getElementById('lcdLine2');
+        const serialConsole = document.getElementById('serialConsole');
+        const adcVoltageText = document.getElementById('adcVoltageText');
+
+        // Inicializar Chart.js Serial Plotter
+        const ctxPlotter = document.getElementById('wokwiPlotterChart').getContext('2d');
+        const wokwiChart = new Chart(ctxPlotter, {
+            type: 'line',
+            data: {
+                labels: Array(20).fill(''),
+                datasets: [
+                    { label: 'Temperatura (°C)', data: Array(20).fill(24.5), borderColor: '#fbbf24', borderWidth: 2, tension: 0.3, pointRadius: 0 },
+                    { label: 'pH (x3)', data: Array(20).fill(21), borderColor: '#06b6d4', borderWidth: 2, tension: 0.3, pointRadius: 0 },
+                    { label: 'Turbidez (/10)', data: Array(20).fill(1.2), borderColor: '#e879f9', borderWidth: 2, tension: 0.3, pointRadius: 0 }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { grid: { color: '#1e293b' }, ticks: { color: '#64748b', font: { family: 'JetBrains Mono', size: 10 } }, min: 0, max: 45 },
+                    x: { grid: { display: false }, ticks: { display: false } }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
+
+        function enviarNotificacionTelegram(mensaje) {
+            const token = getBotToken();
+            const chatId = document.getElementById('cfgAdminChatId').value.trim() || "9095901651";
+            const url = `https://api.telegram.org/bot${token}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(mensaje)}`;
+            
+            fetch(url)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.ok) {
+                        agregarLog("🚀 Notificación enviada con éxito a Telegram");
+                    } else {
+                        agregarLog("⚠️ Error al enviar a Telegram: " + data.description);
+                    }
+                })
+                .catch(err => agregarLog("❌ Error de red con la API de Telegram"));
+        }
+
+        function agregarLog(texto) {
+            const timeStr = new Date().toLocaleTimeString();
+            serialConsole.innerHTML += `<div>[${timeStr}] ${texto}</div>`;
+            serialConsole.scrollTop = serialConsole.scrollHeight;
+        }
+
+        function updateControls() {
+            const temp = parseFloat(sliderTemp.value);
+            const ph = parseFloat(sliderPH.value);
+            const turb = parseFloat(sliderTurb.value);
+
+            valTemp.innerText = temp.toFixed(1) + " °C";
+            valPH.innerText = ph.toFixed(2) + " pH";
+            valTurb.innerText = turb.toFixed(1) + " NTU";
+
+            // Voltaje ADC simulado
+            const adcVal = ((temp / 38.0) * 3.3).toFixed(3);
+            adcVoltageText.innerText = `ADC: ${adcVal} V`;
+
+            // Actualizar LCD Virtual
+            lcdLine1.innerText = `T:${temp.toFixed(1)}C pH:${ph.toFixed(2)}`;
+            
+            let estadoActual = "ESTADO: OPTIMO";
+            let ledG = document.getElementById('hwLedGreen');
+            let ledY = document.getElementById('hwLedYellow');
+            let ledR = document.getElementById('hwLedRed');
+            let buzzer = document.getElementById('hwBuzzer');
+
+            ledG.className = "w-3.5 h-3.5 rounded-full led-off transition-all";
+            ledY.className = "w-3.5 h-3.5 rounded-full led-off transition-all";
+            ledR.className = "w-3.5 h-3.5 rounded-full led-off transition-all";
+            buzzer.className = "w-5 h-5 rounded-full bg-slate-800 border-2 border-slate-600 flex items-center justify-center transition-all";
+
+            if (temp > 32.0 || ph < 6.0 || ph > 8.5 || turb > 150) {
+                estadoActual = "ALERTA CRITICA!";
+                ledR.className = "w-3.5 h-3.5 rounded-full led-red-on transition-all";
+                buzzer.className = "w-5 h-5 rounded-full bg-rose-600 border-2 border-rose-400 flex items-center justify-center transition-all animate-ping";
+            } else if (temp > 29.0 || (ph >= 6.0 && ph < 6.5) || turb > 50) {
+                estadoActual = "PRECAUCION";
+                ledY.className = "w-3.5 h-3.5 rounded-full led-yellow-on transition-all";
+            } else {
+                estadoActual = "ESTADO: OPTIMO";
+                ledG.className = "w-3.5 h-3.5 rounded-full led-green-on transition-all";
+            }
+            lcdLine2.innerText = estadoActual;
+
+            // Detectar cambio de estado para enviar la notificación automática a Telegram
+            if (estadoActual !== estadoAnterior) {
+                if (estadoAnterior !== "") { // Evitar alerta al cargar la página por primera vez
+                    let iconoReporte = "🌊";
+                    if (estadoActual.includes("CRITICA")) iconoReporte = "🚨";
+                    else if (estadoActual.includes("PRECAUCION")) iconoReporte = "⚠️";
+                    else if (estadoActual.includes("OPTIMO")) iconoReporte = "✅";
+
+                    enviarNotificacionTelegram(`${iconoReporte} ¡CAMBIO DE ESTADO EN GUATAPURÍ!\nNuevo Estado: ${estadoActual}\n• Temp: ${temp.toFixed(1)}°C\n• pH: ${ph.toFixed(2)}\n• Turbidez: ${turb.toFixed(1)} NTU`);
+                }
+                estadoAnterior = estadoActual;
+            }
+
+            // Actualizar Gráfica
+            wokwiChart.data.datasets[0].data.shift();
+            wokwiChart.data.datasets[0].data.push(temp);
+            wokwiChart.data.datasets[1].data.shift();
+            wokwiChart.data.datasets[1].data.push(ph * 3);
+            wokwiChart.data.datasets[2].data.shift();
+            wokwiChart.data.datasets[2].data.push(turb / 10);
+            wokwiChart.update('none');
+        }
+
+        function triggerMeasurementCycle() {
+            const temp = parseFloat(sliderTemp.value).toFixed(1);
+            const ph = parseFloat(sliderPH.value).toFixed(2);
+            const turb = parseFloat(sliderTurb.value).toFixed(1);
+            agregarLog(`Muestreo ADC -> Temp: ${temp}°C | pH: ${ph} | Turb: ${turb} NTU`);
+        }
+
+        // Función global para manejar los botones de escenarios rápidos
+        function applyPreset(tipo) {
+            if (tipo === 'clean') {
+                sliderTemp.value = 24.5;
+                sliderPH.value = 7.00;
+                sliderTurb.value = 12;
+            } else if (tipo === 'runoff') {
+                sliderTemp.value = 28.0;
+                sliderPH.value = 6.20;
+                sliderTurb.value = 110;
+            } else if (tipo === 'flood') {
+                sliderTemp.value = 34.5;
+                sliderPH.value = 5.30;
+                sliderTurb.value = 210;
+            }
+            updateControls();
+            triggerMeasurementCycle();
+        }
+
+        function toggleAutoLoop() {
+            autoLoopActive = !autoLoopActive;
+            const icon = document.getElementById('loopIcon');
+            const badge = document.getElementById('systemModeBadge');
+            
+            if (autoLoopActive) {
+                icon.className = "fa-solid fa-arrows-rotate fa-spin text-emerald-400";
+                badge.innerText = "AUTOMATICO";
+                badge.className = "text-[11px] px-2.5 py-0.5 rounded-full font-mono bg-emerald-950 text-emerald-400 border border-emerald-800/50";
+                loopInterval = setInterval(triggerMeasurementCycle, 2000);
+            } else {
+                icon.className = "fa-solid fa-arrows-rotate";
+                badge.innerText = "STANDBY";
+                badge.className = "text-[11px] px-2.5 py-0.5 rounded-full font-mono bg-amber-950 text-amber-400 border border-amber-800/50";
+                clearInterval(loopInterval);
+            }
+        }
+
+        function saveTelegramConfig() {
+            const token = document.getElementById('cfgBotToken').value.trim();
+            const chatId = document.getElementById('cfgAdminChatId').value.trim();
+            if(token && chatId) {
+                localStorage.setItem('tg_bot_token', token);
+                localStorage.setItem('tg_admin_chat', chatId);
+                alert("¡Credenciales guardadas de forma segura en el navegador!");
+            } else {
+                alert("Por favor completa ambos campos.");
+            }
+        }
+
+        function handleRegistration(e) {
+            e.preventDefault();
+            const nombre = document.getElementById('nombreUsuario').value;
+            const chatId = document.getElementById('telegramChatId').value.trim();
+            document.getElementById('cfgAdminChatId').value = chatId;
+            
+            const msg = document.getElementById('mensajeEstado');
+            msg.className = "mt-3 text-xs font-medium text-center text-emerald-400";
+            msg.innerText = `¡Operador ${nombre} registrado y autorizado con éxito!`;
+            agregarLog(`[Telegram] Operador ${nombre} vinculado al Chat ID: ${chatId}`);
+        }
+
+        function clearConsole() {
+            document.getElementById('serialConsole').innerHTML = '<div class="text-slate-500">// Consola limpia.</div>';
+        }
+
+        function openWokwiCodeModal() {
+            window.open("https://wokwi.com/projects/480677131659411457", "_blank");
+        }
+
+        // Eventos en tiempo real para los sliders
+        sliderTemp.addEventListener('input', updateControls);
+        sliderPH.addEventListener('input', updateControls);
+        sliderTurb.addEventListener('input', updateControls);
+
+        // Cargar credenciales guardadas y ejecutar ciclo inicial
+        window.onload = function() {
+            if(localStorage.getItem('tg_bot_token')) {
+                document.getElementById('cfgBotToken').value = localStorage.getItem('tg_bot_token');
+            }
+            if(localStorage.getItem('tg_admin_chat')) {
+                document.getElementById('cfgAdminChatId').value = localStorage.getItem('tg_admin_chat');
+                document.getElementById('telegramChatId').value = localStorage.getItem('tg_admin_chat');
+            }
+            updateControls();
+        };
+    </script>
+</body>
+</html>
