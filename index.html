@@ -377,21 +377,23 @@
         });
 
         function enviarNotificacionTelegram(mensaje) {
-            const token = getBotToken();
-            const chatId = document.getElementById('cfgAdminChatId').value.trim() || "9095901651";
-            const url = `https://api.telegram.org/bot${token}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(mensaje)}`;
-            
-            fetch(url)
-                .then(res => res.json())
-                .then(data => {
-                    if (data.ok) {
-                        agregarLog("🚀 Notificación enviada con éxito a Telegram");
-                    } else {
-                        agregarLog("⚠️ Error al enviar a Telegram: " + data.description);
-                    }
-                })
-                .catch(err => agregarLog("❌ Error de red con la API de Telegram"));
-        }
+    const token = getBotToken();
+    // Forzar siempre tu Chat ID de administrador principal para que nunca se desvíen las alertas
+    const chatIdAdminPrincipal = "9095901651"; 
+    
+    const url = `https://api.telegram.org/bot${token}/sendMessage?chat_id=${chatIdAdminPrincipal}&text=${encodeURIComponent(mensaje)}`;
+    
+    fetch(url)
+        .then(res => res.json())
+        .then(data => {
+            if (data.ok) {
+                agregarLog("🚀 Alerta del río enviada al Administrador Principal.");
+            } else {
+                agregarLog("⚠️ Error de Telegram: " + data.description);
+            }
+        })
+        .catch(err => agregarLog("❌ Error de red al conectar con Telegram"));
+}
 
         function agregarLog(texto) {
             const timeStr = new Date().toLocaleTimeString();
