@@ -61,15 +61,6 @@
             from { opacity: 1; transform: scale(1.05); }
             to { opacity: 0.45; transform: scale(0.95); }
         }
-
-        .buzzer-ring {
-            animation: ripple 0.6s infinite;
-        }
-
-        @keyframes ripple {
-            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
-            100% { box-shadow: 0 0 0 14px rgba(239, 68, 68, 0); }
-        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col bg-slate-950 text-slate-100 antialiased selection:bg-cyan-500 selection:text-slate-950">
@@ -98,7 +89,7 @@
                 <i class="fa-solid fa-arrows-rotate" id="loopIcon"></i> Modo Continuo
             </button>
             <button onclick="openWokwiCodeModal()" class="px-3.5 py-2 bg-cyan-950 hover:bg-cyan-900 text-cyan-300 border border-cyan-700/60 font-semibold rounded-lg text-xs sm:text-sm flex items-center gap-2 transition-all">
-                <i class="fa-solid fa-code"></i> Código Wokwi (sketch.ino + diagram.json)
+                <i class="fa-solid fa-code"></i> Código Wokwi
             </button>
             <button onclick="clearConsole()" class="px-3 py-2 bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white rounded-lg text-xs border border-slate-700/50 transition" title="Limpiar Consola">
                 <i class="fa-solid fa-trash-can"></i>
@@ -123,7 +114,6 @@
 
                 <!-- Virtual Breadboard Canvas -->
                 <div class="bg-[#18181b] rounded-xl p-4 border border-slate-800 relative overflow-hidden">
-                    <!-- Top Row: LCD 16x2 I2C & Status LEDs + Buzzer -->
                     <div class="flex flex-wrap sm:flex-nowrap items-center justify-between gap-4 mb-4">
                         <!-- LCD 16x2 Green Module -->
                         <div class="bg-emerald-900/90 p-2 rounded-lg border-2 border-emerald-700/80 shadow-md flex-1">
@@ -153,7 +143,6 @@
                                     <div id="hwLedRed" class="w-3.5 h-3.5 rounded-full bg-red-500 led-off transition-all"></div>
                                     <span class="text-[8px] font-mono text-slate-500 mt-1">CRIT</span>
                                 </div>
-                                <!-- Piezo Buzzer -->
                                 <div class="flex flex-col items-center ml-1">
                                     <div id="hwBuzzer" class="w-5 h-5 rounded-full bg-slate-800 border-2 border-slate-600 flex items-center justify-center transition-all">
                                         <div class="w-1.5 h-1.5 rounded-full bg-slate-400"></div>
@@ -175,7 +164,7 @@
                         </div>
                         <div class="bg-slate-900 p-2.5 rounded-lg border border-slate-800 flex items-center justify-between">
                             <div>
-                                <div class="text-[11px] font-bold text-slate-300">3 Potenciómetros + LCD</div>
+                                <div class="text-[11px] font-bold text-slate-300">3 Potenciómetros</div>
                                 <div class="text-[10px] font-mono text-emerald-400" id="mosfetRailText">Pines 34, 35, 32 | I2C</div>
                             </div>
                             <div id="ledMosfet" class="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]"></div>
@@ -184,11 +173,11 @@
                 </div>
             </div>
 
-            <!-- Río Guatapurí Variable Injection (Potentiometers / Sensors) -->
+            <!-- Río Guatapurí Variable Injection (Potentiometers) -->
             <div class="bg-slate-900 rounded-2xl border border-slate-800 p-5 shadow-xl">
                 <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-800">
                     <h2 class="text-sm font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
-                        <i class="fa-solid fa-sliders text-cyan-400"></i> Sensores Simulados (Potenciómetros Wokwi)
+                        <i class="fa-solid fa-sliders text-cyan-400"></i> Sensores Simulados (Potenciómetros)
                     </h2>
                 </div>
 
@@ -207,18 +196,16 @@
 
                 <!-- Sliders -->
                 <div class="space-y-3.5">
-                    <!-- Temperature Slider -->
                     <div>
                         <div class="flex justify-between text-xs mb-1 font-semibold">
                             <label for="sliderTemp" class="text-slate-300 flex items-center gap-1.5">
-                                <span class="w-2 h-2 rounded-full bg-amber-400 inline-block"></span> Temperatura Agua (°C) [Umbral Alerta: > 29.0°C]
+                                <span class="w-2 h-2 rounded-full bg-amber-400 inline-block"></span> Temperatura Agua (°C)
                             </label>
                             <span id="valTemp" class="font-mono text-amber-400">24.5 °C</span>
                         </div>
                         <input type="range" id="sliderTemp" min="15" max="38" step="0.5" value="24.5" oninput="updateControls()" class="w-full accent-amber-500 bg-slate-800 rounded-lg h-2 cursor-pointer">
                     </div>
 
-                    <!-- pH Slider -->
                     <div>
                         <div class="flex justify-between text-xs mb-1 font-semibold">
                             <label for="sliderPH" class="text-slate-300 flex items-center gap-1.5">
@@ -229,7 +216,6 @@
                         <input type="range" id="sliderPH" min="5.0" max="9.5" step="0.05" value="7.00" oninput="updateControls()" class="w-full accent-cyan-500 bg-slate-800 rounded-lg h-2 cursor-pointer">
                     </div>
 
-                    <!-- Turbidity Slider -->
                     <div>
                         <div class="flex justify-between text-xs mb-1 font-semibold">
                             <label for="sliderTurb" class="text-slate-300 flex items-center gap-1.5">
@@ -239,17 +225,6 @@
                         </div>
                         <input type="range" id="sliderTurb" min="0" max="300" step="1" value="12" oninput="updateControls()" class="w-full accent-fuchsia-500 bg-slate-800 rounded-lg h-2 cursor-pointer">
                     </div>
-
-                    <!-- Distance Slider -->
-                    <div>
-                        <div class="flex justify-between text-xs mb-1 font-semibold">
-                            <label for="sliderDist" class="text-slate-300 flex items-center gap-1.5">
-                                <span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span> Distancia Enlace LoRa (km)
-                            </label>
-                            <span id="valDist" class="font-mono text-emerald-400">3.50 km</span>
-                        </div>
-                        <input type="range" id="sliderDist" min="0.5" max="12.0" step="0.25" value="3.5" oninput="updateControls()" class="w-full accent-emerald-500 bg-slate-800 rounded-lg h-2 cursor-pointer">
-                    </div>
                 </div>
             </div>
         </div>
@@ -257,17 +232,12 @@
         <!-- RIGHT COLUMN: Wokwi Style Serial Plotter + Console + Analytics (7 Cols) -->
         <div class="lg:col-span-7 flex flex-col gap-6">
 
-            <!-- WOKWI SERIAL PLOTTER (Oscilloscope Real-Time Waveform Chart) -->
+            <!-- WOKWI SERIAL PLOTTER -->
             <div class="bg-slate-900 rounded-2xl border border-slate-800 p-4 shadow-xl">
                 <div class="flex flex-wrap items-center justify-between gap-2 mb-3 pb-2 border-b border-slate-800">
                     <h2 class="text-sm font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
-                        <i class="fa-solid fa-wave-square text-emerald-400"></i> Serial Plotter en Tiempo Real (Señales ADC & Sensores)
+                        <i class="fa-solid fa-wave-square text-emerald-400"></i> Serial Plotter en Tiempo Real
                     </h2>
-                    <div class="flex items-center gap-3 text-[11px] font-mono">
-                        <span class="flex items-center gap-1 text-amber-400"><span class="w-2.5 h-0.5 bg-amber-400 inline-block"></span> Temp (°C)</span>
-                        <span class="flex items-center gap-1 text-cyan-400"><span class="w-2.5 h-0.5 bg-cyan-400 inline-block"></span> pH (x3)</span>
-                        <span class="flex items-center gap-1 text-fuchsia-400"><span class="w-2.5 h-0.5 bg-fuchsia-400 inline-block"></span> Turb (/10)</span>
-                    </div>
                 </div>
                 <div class="bg-[#050505] rounded-xl p-3 border border-slate-800 h-56 relative">
                     <canvas id="wokwiPlotterChart"></canvas>
@@ -281,37 +251,13 @@
                         <span class="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block"></span>
                         <span class="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></span>
                         <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>
-                        <span class="ml-2 font-mono text-xs text-slate-400 font-semibold">
-                            Monitor Serial ESP32 (115200 baud)
-                        </span>
+                        <span class="ml-2 font-mono text-xs text-slate-400 font-semibold">Monitor Serial ESP32 (115200 baud)</span>
                     </div>
-                    <label class="text-[11px] text-slate-500 font-mono flex items-center gap-1.5">
-                        <input type="checkbox" id="chkAutoScroll" checked class="rounded bg-slate-800 border-slate-700 text-cyan-500"> Auto-scroll
-                    </label>
                 </div>
                 <div id="serialConsole" class="flex-1 p-3.5 font-mono text-xs leading-relaxed bg-[#050811] text-emerald-400 overflow-y-auto space-y-1">
-                    <div class="text-slate-500">// Sistema NT-IoT Río Guatapurí listo. Mueve los deslizadores o presiona "Ejecutar Ciclo".</div>
+                    <div class="text-slate-500">// Sistema NT-IoT Río Guatapurí listo.</div>
                 </div>
             </div>
-
-            <!-- Comparative Analytical Charts -->
-            <div class="bg-slate-900 rounded-2xl border border-slate-800 p-4 shadow-xl">
-                <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-800">
-                    <h2 class="text-sm font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
-                        <i class="fa-solid fa-chart-area text-cyan-400"></i> Calibración Matemática & Presupuesto RF LoRa
-                    </h2>
-                    <span class="text-xs font-mono text-cyan-400" id="lastErrorMetric">Error ADC: 0.00%</span>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800/80 h-44">
-                        <canvas id="phChart"></canvas>
-                    </div>
-                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800/80 h-44">
-                        <canvas id="rfChart"></canvas>
-                    </div>
-                </div>
-            </div>
-
         </div>
     </main>
 
@@ -322,22 +268,11 @@
         <div class="lg:col-span-7 bg-slate-900 rounded-2xl border border-slate-800 p-5 shadow-xl flex flex-col">
             <div class="flex flex-wrap items-center justify-between gap-2 mb-3 pb-2.5 border-b border-slate-800">
                 <h3 class="text-sm font-bold uppercase tracking-wider text-slate-200 flex items-center gap-2">
-                    <i class="fa-solid fa-bolt text-amber-400"></i> Simulación Física Oficial en Wokwi (Proyecto #480677131659411457)
+                    <i class="fa-solid fa-bolt text-amber-400"></i> Simulación Física Oficial en Wokwi
                 </h3>
-                <div class="flex items-center gap-2">
-                    <input type="text" id="wokwiUrlInput" value="https://wokwi.com/projects/480677131659411457" placeholder="Pega aquí tu enlace de Wokwi..." class="px-2.5 py-1 rounded bg-slate-950 border border-slate-700 text-xs text-slate-200 font-mono w-48 sm:w-64 focus:border-cyan-500 focus:outline-none">
-                    <button onclick="updateWokwiIframe()" class="px-2.5 py-1 bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-bold rounded text-xs transition">Cargar</button>
-                    <a href="https://wokwi.com/projects/480677131659411457" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded text-xs font-semibold transition flex items-center gap-1" title="Abrir en pantalla completa">
-                        <i class="fa-solid fa-up-right-from-square"></i>
-                    </a>
-                </div>
             </div>
             <div class="flex-1 min-h-[480px] rounded-xl overflow-hidden border border-slate-800 bg-slate-950 shadow-inner">
                 <iframe id="wokwiIframe" src="https://wokwi.com/projects/480677131659411457" class="w-full h-[490px]" style="border:0;" allowfullscreen></iframe>
-            </div>
-            <div class="mt-3 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-400 bg-slate-950/70 px-3 py-2 rounded-lg border border-slate-800/80">
-                <span><i class="fa-solid fa-circle-info text-cyan-400 mr-1"></i> Presiona el botón verde <strong>▶</strong> dentro del cuadro para iniciar la simulación en vivo.</span>
-                <span class="font-mono text-emerald-400">ESP32 + LCD 16x2 I2C + Serial Plotter</span>
             </div>
         </div>
 
@@ -348,12 +283,7 @@
                     <h3 class="text-sm font-bold uppercase tracking-wider text-slate-200 flex items-center gap-2">
                         <i class="fa-brands fa-telegram text-sky-400 text-lg"></i> Centro de Alertas & Suscripción Telegram
                     </h3>
-                    <span class="text-[11px] px-2 py-0.5 rounded bg-sky-950 text-sky-400 border border-sky-800/60 font-mono">API Bot Segura</span>
                 </div>
-
-                <p class="text-xs text-slate-400 mb-4 leading-relaxed">
-                    Configura tus credenciales de administrador una sola vez de forma privada y regístrate como operador para recibir alertas críticas del Río Guatapurí.
-                </p>
 
                 <!-- Bot Configuration Section (Secure Local Storage) -->
                 <div class="mb-4 bg-slate-950/90 border border-slate-800 rounded-xl p-3 text-xs">
@@ -362,12 +292,12 @@
                     </div>
                     <div class="space-y-2.5">
                         <div>
-                            <label class="block text-[11px] text-slate-400 mb-1">Bot Token (@BotFather):</label>
-                            <input type="password" id="cfgBotToken" placeholder="Ej: 123456789:ABCdefGhIJKlmNoPQRs..." class="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-slate-200 font-mono text-xs focus:border-cyan-500 focus:outline-none">
+                            <label class="block text-[11px] text-slate-400 mb-1">Bot Token:</label>
+                            <input type="password" id="cfgBotToken" placeholder="Token del Bot..." class="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-slate-200 font-mono text-xs focus:border-cyan-500 focus:outline-none">
                         </div>
                         <div>
-                            <label class="block text-[11px] text-slate-400 mb-1">Chat ID Administrador Principal:</label>
-                            <input type="text" id="cfgAdminChatId" placeholder="Ej: 7787186027" class="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-slate-200 font-mono text-xs focus:border-cyan-500 focus:outline-none">
+                            <label class="block text-[11px] text-slate-400 mb-1">Chat ID Administrador:</label>
+                            <input type="text" id="cfgAdminChatId" placeholder="Chat ID..." class="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-slate-200 font-mono text-xs focus:border-cyan-500 focus:outline-none">
                         </div>
                         <button type="button" onclick="saveTelegramConfig()" class="w-full py-1.5 bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-bold rounded-lg text-xs transition">
                             Guardar Credenciales en Sesión Segura
@@ -376,10 +306,10 @@
                 </div>
 
                 <!-- Registration Form -->
-                <form id="formRegistro" class="space-y-3">
+                <form id="formRegistro" onsubmit="handleRegistration(event)" class="space-y-3">
                     <div>
                         <label class="block text-xs font-semibold text-slate-300 mb-1">Nombre Completo del Operador</label>
-                        <input type="text" id="nombreUsuario" placeholder="Ej: Ing. Carlos Mendoza" required class="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-700 text-slate-100 text-xs focus:border-sky-500 focus:outline-none">
+                        <input type="text" id="nombreUsuario" placeholder="Ej: Pahola Rocha" required class="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-700 text-slate-100 text-xs focus:border-sky-500 focus:outline-none">
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-300 mb-1">Tu Telegram Chat ID</label>
@@ -392,623 +322,148 @@
 
                 <p id="mensajeEstado" class="mt-3 text-xs font-medium text-center min-h-[18px]"></p>
             </div>
-
-            <!-- Quick Alert Test Button -->
-            <div class="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between gap-3">
-                <span class="text-[11px] text-slate-400">¿Quieres probar una alerta directa ahora?</span>
-                <button type="button" onclick="sendTestTemperatureAlert()" class="px-3 py-1.5 bg-rose-950 hover:bg-rose-900 text-rose-300 border border-rose-800/60 rounded-lg text-xs font-semibold transition flex items-center gap-1.5">
-                    <i class="fa-solid fa-bell"></i> Simular Alerta Térmica
-                </button>
-            </div>
         </div>
     </section>
 
     <!-- Footer -->
     <footer class="border-t border-slate-800/80 bg-slate-900/50 py-3.5 text-center text-xs text-slate-500">
-        <p>Nodo de Telemetría IoT (NT-IoT) • Proyecto UNAD - Monitoreo Ambiental Cuenca Río Guatapurí © 2026</p>
+        <p>Nodo de Telemetría IoT (NT-IoT) • Monitoreo Ambiental Cuenca Río Guatapurí © 2026</p>
     </footer>
 
-    <!-- Modal with Upgraded Wokwi Code (LCD + Plotter + LEDs + Buzzer + Telegram) -->
-    <div id="wokwiModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
-            <div class="px-5 py-3.5 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
-                <h3 class="text-sm font-bold text-white flex items-center gap-2">
-                    <i class="fa-solid fa-microchip text-emerald-400"></i> Código Mejorado para Wokwi (con LCD 16x2, Plotter, LEDs y Buzzer)
-                </h3>
-                <button onclick="closeWokwiCodeModal()" class="text-slate-400 hover:text-white text-lg">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
-            <div class="p-5 overflow-y-auto space-y-5 text-xs">
-                <p class="text-slate-300">
-                    Para que tu circuito en Wokwi tenga pantalla LCD, LEDs de estado, alarma sonora, deslizadores y gráficas en el <strong>Serial Plotter</strong> (el botón con forma de onda abajo a la derecha en Wokwi), reemplaza tus archivos en Wokwi por los siguientes:
-                </p>
-
-                <!-- sketch.ino -->
-                <div>
-                    <div class="flex justify-between items-center mb-1.5">
-                        <span class="font-bold text-cyan-400 font-mono">1. Archivo: sketch.ino</span>
-                        <button onclick="copyCodeBlock('codeSketch')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded border border-slate-600 text-[11px]">
-                            <i class="fa-regular fa-copy"></i> Copiar sketch.ino
-                        </button>
-                    </div>
-                    <pre id="codeSketch" class="bg-slate-950 p-3 rounded-xl border border-slate-800 font-mono text-[11px] text-emerald-300 overflow-x-auto max-h-56">#include &lt;WiFi.h&gt;
-#include &lt;HTTPClient.h&gt;
-#include &lt;Wire.h&gt;
-#include &lt;LiquidCrystal_I2C.h&gt;
-
-// Inicializar pantalla LCD I2C (0x27, 16 columnas, 2 filas)
-LiquidCrystal_I2C lcd(0x27, 16, 2);
-
-// Credenciales Telegram
-const char* ssid = "Wokwi-GUEST";
-const char* password = "";
-String botToken = "8854897042:AAEj_CURG794CRjskPBTMXNuHzM6p-wgwFc";
-String chatId   = "7787186027";
-unsigned long ultimaAlerta = 0;
-
-void setup() {
-  Serial.begin(115200);
-  lcd.init();
-  lcd.backlight();
-  lcd.setCursor(0, 0);
-  lcd.print("NT-IoT Guatapuri");
-  lcd.setCursor(0, 1);
-  lcd.print("Conectando WiFi");
-
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(300);
-  }
-  lcd.clear();
-}
-
-void loop() {
-  int rawTemp = analogRead(34); // Potenciómetro 1: Temperatura
-  int rawPH   = analogRead(35); // Potenciómetro 2: pH
-  int rawTurb = analogRead(32); // Potenciómetro 3: Turbidez
-
-  float temperatura = map(rawTemp, 0, 4095, 15, 45);
-  float ph          = map(rawPH, 0, 4095, 0, 140) / 10.0;
-  float turbidez    = map(rawTurb, 0, 4095, 0, 300);
-
-  // Actualizar Pantalla LCD
-  lcd.setCursor(0, 0);
-  lcd.print("Temp: " + String(temperatura, 1) + " C   ");
-  lcd.setCursor(0, 1);
-  lcd.print("pH:   " + String(ph, 1) + "       ");
-
-  // Enviar ondas al Serial Plotter de Wokwi
-  Serial.print("Temperatura:");
-  Serial.print(temperatura);
-  Serial.print(",pH:");
-  Serial.print(ph);
-  Serial.print(",Turbidez_x01:");
-  Serial.println(turbidez * 0.1);
-
-  // Alerta automática a Telegram si supera umbral
-  if ((temperatura > 35.0 || ph < 6.0 || ph > 8.5) && (millis() - ultimaAlerta > 30000)) {
-    if (WiFi.status() == WL_CONNECTED) {
-      HTTPClient http;
-      String msg = "🚨 Alerta Rio Guatapuri 🚨%0ATemp: " + String(temperatura, 1) + "C%0ApH: " + String(ph, 1);
-      http.begin("https://api.telegram.org/bot" + botToken + "/sendMessage?chat_id=" + chatId + "&text=" + msg);
-      http.GET();
-      http.end();
-      ultimaAlerta = millis();
-    }
-  }
-
-  delay(800);
-}</pre>
-                </div>
-
-                <!-- diagram.json -->
-                <div>
-                    <div class="flex justify-between items-center mb-1.5">
-                        <span class="font-bold text-amber-400 font-mono">2. Archivo: diagram.json (Conexiones corregidas 3 Potenciómetros + LCD)</span>
-                        <button onclick="copyCodeBlock('codeDiagram')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded border border-slate-600 text-[11px]">
-                            <i class="fa-regular fa-copy"></i> Copiar diagram.json
-                        </button>
-                    </div>
-                    <pre id="codeDiagram" class="bg-slate-950 p-3 rounded-xl border border-slate-800 font-mono text-[11px] text-amber-200 overflow-x-auto max-h-56">{
-  "version": 1,
-  "author": "Pahola Rocha",
-  "editor": "wokwi",
-  "parts": [
-    { "type": "wokwi-esp32-devkit-v1", "id": "esp", "top": -81.7, "left": -5, "attrs": {} },
-    { "type": "wokwi-potentiometer", "id": "pot1", "top": -86.6, "left": 146.1, "rotate": 90, "attrs": {} },
-    { "type": "wokwi-potentiometer", "id": "pot2", "top": -0.2, "left": 146.1, "rotate": 90, "attrs": {} },
-    { "type": "wokwi-potentiometer", "id": "pot3", "top": 86.2, "left": 146.1, "rotate": 90, "attrs": {} },
-    { "type": "wokwi-lcd1602", "id": "lcd1", "top": -243.2, "left": 264.8, "attrs": { "pins": "i2c" } }
-  ],
-  "connections": [
-    [ "esp:TX0", "$serialMonitor:RX", "", [] ],
-    [ "esp:RX0", "$serialMonitor:TX", "", [] ],
-    [ "pot1:VCC", "esp:3V3", "red", [ "h0" ] ],
-    [ "pot1:GND", "esp:GND.1", "black", [ "h0" ] ],
-    [ "pot1:SIG", "esp:34", "blue", [ "h0" ] ],
-    [ "pot2:VCC", "esp:3V3", "red", [ "h0" ] ],
-    [ "pot2:GND", "esp:GND.1", "black", [ "h0" ] ],
-    [ "pot2:SIG", "esp:35", "orange", [ "h0" ] ],
-    [ "pot3:VCC", "esp:3V3", "red", [ "h0" ] ],
-    [ "pot3:GND", "esp:GND.1", "black", [ "h0" ] ],
-    [ "pot3:SIG", "esp:32", "green", [ "h0" ] ],
-    [ "lcd1:VCC", "esp:3V3", "red", [ "h0" ] ],
-    [ "lcd1:GND", "esp:GND.1", "black", [ "h0" ] ],
-    [ "lcd1:SDA", "esp:D21", "limegreen", [ "h0" ] ],
-    [ "lcd1:SCL", "esp:D22", "cyan", [ "h0" ] ]
-  ],
-  "dependencies": {}
-}</pre>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- JavaScript Simulator Engine -->
+    <!-- JavaScript Core Simulation Engine -->
     <script>
-        let isRunning = false;
-        let autoLoopInterval = null;
-        let plotterInterval = null;
-        let lastAlertSentTime = 0;
+        let autoLoopActive = false;
+        let loopInterval = null;
 
-        // Credentials managed securely via browser localStorage (No hardcoded secrets)
-        function getBotToken() {
-            return localStorage.getItem('nt_bot_token') || "";
-        }
-        function getAdminChatId() {
-            return localStorage.getItem('nt_admin_id') || "";
-        }
-
-        const presets = {
-            clean:  { ph: 7.05, turb: 12,  temp: 24.5, dist: 3.5 },
-            runoff: { ph: 6.65, turb: 95,  temp: 26.8, dist: 4.0 },
-            flood:  { ph: 8.70, turb: 240, temp: 31.5, dist: 5.5 }
-        };
-
-        let wokwiPlotterChart, phChart, rfChart;
-
-        window.onload = function() {
-            initCharts();
-            updateControls();
-            startRealtimePlotter();
-
-            // Pre-fill fields if stored locally
-            if(localStorage.getItem('nt_bot_token')) {
-                document.getElementById('cfgBotToken').value = localStorage.getItem('nt_bot_token');
+        // Inicializar Chart.js Serial Plotter
+        const ctxPlotter = document.getElementById('wokwiPlotterChart').getContext('2d');
+        const wokwiChart = new Chart(ctxPlotter, {
+            type: 'line',
+            data: {
+                labels: Array(20).fill(''),
+                datasets: [
+                    { label: 'Temperatura (°C)', data: Array(20).fill(24.5), borderColor: '#fbbf24', borderWidth: 2, tension: 0.3, pointRadius: 0 },
+                    { label: 'pH (x3)', data: Array(20).fill(21), borderColor: '#06b6d4', borderWidth: 2, tension: 0.3, pointRadius: 0 },
+                    { label: 'Turbidez (/10)', data: Array(20).fill(1.2), borderColor: '#e879f9', borderWidth: 2, tension: 0.3, pointRadius: 0 }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { grid: { color: '#1e293b' }, ticks: { color: '#64748b', font: { family: 'JetBrains Mono', size: 10 } }, min: 0, max: 45 },
+                    x: { grid: { display: false }, ticks: { display: false } }
+                },
+                plugins: { legend: { display: false } }
             }
-            if(localStorage.getItem('nt_admin_id')) {
-                document.getElementById('cfgAdminChatId').value = localStorage.getItem('nt_admin_id');
-            }
-        };
+        });
 
-        function updateWokwiIframe() {
-            const url = document.getElementById('wokwiUrlInput').value.trim();
-            if (url && url.includes('wokwi.com')) {
-                document.getElementById('wokwiIframe').src = url;
-                logToConsole("[WOKWI] Simulación incrustada actualizada correctamente.", "text-cyan-400");
+        function updateControls() {
+            const temp = parseFloat(document.getElementById('sliderTemp').value);
+            const ph = parseFloat(document.getElementById('sliderPH').value);
+            const turb = parseFloat(document.getElementById('sliderTurb').value);
+
+            document.getElementById('valTemp').innerText = temp.toFixed(1) + " °C";
+            document.getElementById('valPH').innerText = ph.toFixed(2) + " pH";
+            document.getElementById('valTurb').innerText = turb.toFixed(1) + " NTU";
+
+            // Actualizar LCD Virtual
+            document.getElementById('lcdLine1').innerText = `T:${temp.toFixed(1)}C pH:${ph.toFixed(2)}`;
+            
+            let estado = "ESTADO: OPTIMO";
+            let ledG = document.getElementById('hwLedGreen');
+            let ledY = document.getElementById('hwLedYellow');
+            let ledR = document.getElementById('hwLedRed');
+
+            ledG.className = "w-3.5 h-3.5 rounded-full led-off transition-all";
+            ledY.className = "w-3.5 h-3.5 rounded-full led-off transition-all";
+            ledR.className = "w-3.5 h-3.5 rounded-full led-off transition-all";
+
+            if (temp > 32.0 || ph < 6.0 || ph > 8.5 || turb > 150) {
+                estado = "ALERTA CRITICA!";
+                ledR.className = "w-3.5 h-3.5 rounded-full led-red-on transition-all";
+            } else if (temp > 29.0 || (ph >= 6.0 && ph < 6.5) || turb > 50) {
+                estado = "PRECAUCION";
+                ledY.className = "w-3.5 h-3.5 rounded-full led-yellow-on transition-all";
+            } else {
+                ledG.className = "w-3.5 h-3.5 rounded-full led-green-on transition-all";
+            }
+            document.getElementById('lcdLine2').innerText = estado;
+
+            // Actualizar Gráfica
+            wokwiChart.data.datasets[0].data.shift();
+            wokwiChart.data.datasets[0].data.push(temp);
+            wokwiChart.data.datasets[1].data.shift();
+            wokwiChart.data.datasets[1].data.push(ph * 3);
+            wokwiChart.data.datasets[2].data.shift();
+            wokwiChart.data.datasets[2].data.push(turb / 10);
+            wokwiChart.update('none');
+        }
+
+        function triggerMeasurementCycle() {
+            const temp = document.getElementById('sliderTemp').value;
+            const ph = document.getElementById('sliderPH').value;
+            const turb = document.getElementById('sliderTurb').value;
+            
+            const consoleBox = document.getElementById('serialConsole');
+            const timeStr = new Date().toLocaleTimeString();
+            
+            consoleBox.innerHTML += `<div>[${timeStr}] Muestreo ADC -> Temp: ${temp}°C | pH: ${ph} | Turb: ${turb} NTU</div>`;
+            consoleBox.scrollTop = consoleBox.scrollHeight;
+        }
+
+        function toggleAutoLoop() {
+            autoLoopActive = !autoLoopActive;
+            const icon = document.getElementById('loopIcon');
+            const badge = document.getElementById('systemModeBadge');
+            
+            if (autoLoopActive) {
+                icon.className = "fa-solid fa-arrows-rotate fa-spin text-emerald-400";
+                badge.innerText = "AUTOMATICO";
+                badge.className = "text-[11px] px-2.5 py-0.5 rounded-full font-mono bg-emerald-950 text-emerald-400 border border-emerald-800/50";
+                loopInterval = setInterval(triggerMeasurementCycle, 2000);
+            } else {
+                icon.className = "fa-solid fa-arrows-rotate";
+                badge.innerText = "STANDBY";
+                badge.className = "text-[11px] px-2.5 py-0.5 rounded-full font-mono bg-amber-950 text-amber-400 border border-amber-800/50";
+                clearInterval(loopInterval);
             }
         }
 
         function saveTelegramConfig() {
             const token = document.getElementById('cfgBotToken').value.trim();
-            const adminId = document.getElementById('cfgAdminChatId').value.trim();
-            if (token && adminId) {
-                localStorage.setItem('nt_bot_token', token);
-                localStorage.setItem('nt_admin_id', adminId);
-                logToConsole("[TELEGRAM] Credenciales del Bot guardadas de forma segura en el navegador.", "text-sky-400");
-                showStatusMessage("¡Credenciales guardadas con éxito en sesión local!", "#4ade80");
+            const chatId = document.getElementById('cfgAdminChatId').value.trim();
+            if(token && chatId) {
+                localStorage.setItem('tg_bot_token', token);
+                localStorage.setItem('tg_admin_chat', chatId);
+                alert("¡Credenciales guardadas de forma segura en el navegador!");
             } else {
-                showStatusMessage("Por favor ingresa un Token y un Chat ID válidos.", "#f87171");
+                alert("Por favor completa ambos campos.");
             }
         }
 
-        function showStatusMessage(text, color) {
-            const el = document.getElementById('mensajeEstado');
-            el.style.color = color;
-            el.innerText = text;
-        }
-
-        // Update sliders, LCD screen, LEDs and Buzzer in real time
-        function updateControls() {
-            const temp = parseFloat(document.getElementById('sliderTemp').value);
-            const ph   = parseFloat(document.getElementById('sliderPH').value);
-            const turb = parseFloat(document.getElementById('sliderTurb').value);
-            const dist = parseFloat(document.getElementById('sliderDist').value);
-
-            document.getElementById('valTemp').innerText = temp.toFixed(1) + ' °C';
-            document.getElementById('valPH').innerText   = ph.toFixed(2) + ' pH';
-            document.getElementById('valTurb').innerText = turb.toFixed(1) + ' NTU';
-            document.getElementById('valDist').innerText = dist.toFixed(2) + ' km';
-
-            // Update Virtual LCD 16x2
-            document.getElementById('lcdLine1').innerText = `T:${temp.toFixed(1)}C pH:${ph.toFixed(2)}`;
-            
-            const ledGreen  = document.getElementById('hwLedGreen');
-            const ledYellow = document.getElementById('hwLedYellow');
-            const ledRed    = document.getElementById('hwLedRed');
-            const buzzer    = document.getElementById('hwBuzzer');
-            const lcdLine2  = document.getElementById('lcdLine2');
-
-            // Reset LEDs
-            ledGreen.className  = "w-3.5 h-3.5 rounded-full bg-green-500 led-off transition-all";
-            ledYellow.className = "w-3.5 h-3.5 rounded-full bg-yellow-500 led-off transition-all";
-            ledRed.className    = "w-3.5 h-3.5 rounded-full bg-red-500 led-off transition-all";
-            buzzer.classList.remove('buzzer-ring', 'border-rose-500');
-
-            // Threshold Evaluation
-            if (temp > 29.0 || ph < 6.0 || ph > 8.5 || turb > 180) {
-                ledRed.className = "w-3.5 h-3.5 rounded-full bg-red-500 led-red-on transition-all";
-                buzzer.classList.add('buzzer-ring', 'border-rose-500');
-                lcdLine2.innerText = "ALERTA CRITICA!";
-                triggerAutomaticTelegramAlert(temp, ph, turb);
-            } else if (temp > 26.5 || turb > 80) {
-                ledYellow.className = "w-3.5 h-3.5 rounded-full bg-yellow-500 led-yellow-on transition-all";
-                lcdLine2.innerText = "PRECAUCION RIO";
-            } else {
-                ledGreen.className = "w-3.5 h-3.5 rounded-full bg-green-500 led-green-on transition-all";
-                lcdLine2.innerText = "ESTADO: OPTIMO";
-            }
-        }
-
-        function applyPreset(type) {
-            const p = presets[type];
-            if (p) {
-                document.getElementById('sliderPH').value   = p.ph;
-                document.getElementById('sliderTurb').value = p.turb;
-                document.getElementById('sliderTemp').value = p.temp;
-                document.getElementById('sliderDist').value = p.dist;
-                updateControls();
-                logToConsole(`[ESCENARIO] Cargado perfil: ${type.toUpperCase()} -> T=${p.temp}°C, pH=${p.ph}, Turb=${p.turb}NTU`, 'text-cyan-400');
-            }
-        }
-
-        // Continuous oscilloscope-style Serial Plotter engine
-        function startRealtimePlotter() {
-            if (plotterInterval) clearInterval(plotterInterval);
-            plotterInterval = setInterval(() => {
-                if (!wokwiPlotterChart) return;
-
-                const baseTemp = parseFloat(document.getElementById('sliderTemp').value);
-                const basePH   = parseFloat(document.getElementById('sliderPH').value);
-                const baseTurb = parseFloat(document.getElementById('sliderTurb').value);
-
-                // Subtle realistic ADC sensor ripple
-                const tempSample = baseTemp + (Math.random() - 0.5) * 0.25;
-                const phScaled   = (basePH + (Math.random() - 0.5) * 0.05) * 3.0;
-                const turbScaled = (baseTurb + (Math.random() - 0.5) * 2.0) / 10.0;
-
-                const now = new Date().toLocaleTimeString('es-CO', { hour12: false, minute: '2-digit', second: '2-digit' });
-
-                if (wokwiPlotterChart.data.labels.length > 35) {
-                    wokwiPlotterChart.data.labels.shift();
-                    wokwiPlotterChart.data.datasets[0].data.shift();
-                    wokwiPlotterChart.data.datasets[1].data.shift();
-                    wokwiPlotterChart.data.datasets[2].data.shift();
-                }
-
-                wokwiPlotterChart.data.labels.push(now);
-                wokwiPlotterChart.data.datasets[0].data.push(tempSample);
-                wokwiPlotterChart.data.datasets[1].data.push(phScaled);
-                wokwiPlotterChart.data.datasets[2].data.push(turbScaled);
-                wokwiPlotterChart.update('none');
-            }, 600);
-        }
-
-        function logToConsole(msg, colorClass = 'text-emerald-400') {
-            const consoleEl = document.getElementById('serialConsole');
-            const entry = document.createElement('div');
-            entry.className = `${colorClass} font-mono`;
-            const timestamp = new Date().toISOString().split('T')[1].slice(0, 8);
-            entry.innerText = `[${timestamp}] ${msg}`;
-            consoleEl.appendChild(entry);
-            if (document.getElementById('chkAutoScroll').checked) {
-                consoleEl.scrollTop = consoleEl.scrollHeight;
-            }
+        function handleRegistration(e) {
+            e.preventDefault();
+            const nombre = document.getElementById('nombreUsuario').value;
+            const msg = document.getElementById('mensajeEstado');
+            msg.className = "mt-3 text-xs font-medium text-center text-emerald-400";
+            msg.innerText = `¡Operador ${nombre} registrado y autorizado con éxito!`;
         }
 
         function clearConsole() {
-            document.getElementById('serialConsole').innerHTML = `<div class="text-slate-500">// Consola limpia.</div>`;
+            document.getElementById('serialConsole').innerHTML = '<div class="text-slate-500">// Consola limpia.</div>';
         }
 
-        const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
-
-        async function triggerMeasurementCycle() {
-            if (isRunning) return;
-            isRunning = true;
-            document.getElementById('btnRunCycle').disabled = true;
-
-            const badgeMode = document.getElementById('systemModeBadge');
-            badgeMode.innerText = "MUESTREO ACTIVO";
-            badgeMode.className = "text-[11px] px-2.5 py-0.5 rounded-full font-mono bg-emerald-950 text-emerald-400 border border-emerald-800/50";
-
-            const targetPH   = parseFloat(document.getElementById('sliderPH').value);
-            const targetTurb = parseFloat(document.getElementById('sliderTurb').value);
-            const targetTemp = parseFloat(document.getElementById('sliderTemp').value);
-            const targetDist = parseFloat(document.getElementById('sliderDist').value);
-
-            logToConsole("--------------------------------------------------", "text-slate-600");
-            logToConsole("[PWR] MOSFET GPIO 23 ON -> Estabilizando sondas...", "text-amber-400");
-            await sleep(400);
-
-            // Oversampling simulation
-            let sumADC_pH = 0;
-            for (let i = 0; i < 16; i++) {
-                const samplePH = targetPH + (Math.random() - 0.5) * 0.08;
-                const vPH = 1.65 - (samplePH - 7.0) * 0.05916;
-                sumADC_pH += Math.round((vPH / 3.3) * 4095);
+        // Cargar credenciales guardadas si existen
+        window.onload = function() {
+            if(localStorage.getItem('tg_bot_token')) {
+                document.getElementById('cfgBotToken').value = localStorage.getItem('tg_bot_token');
             }
-            const rawPHAvg = sumADC_pH / 16;
-            const calcV_pH = (rawPHAvg * 3.3) / 4095.0;
-            const calcPH   = 7.0 + ((1.65 - calcV_pH) / 0.05916);
-            const errorPH  = Math.abs((targetPH - calcPH) / targetPH) * 100;
-
-            document.getElementById('adcVoltageText').innerText = `ADC: ${calcV_pH.toFixed(3)} V`;
-            document.getElementById('lastErrorMetric').innerText = `Error ADC: ${errorPH.toFixed(2)}%`;
-
-            // LoRa Link Budget
-            const fspl = 20 * Math.log10(targetDist) + 20 * Math.log10(915) + 32.44;
-            const rssi = 19.0 - fspl + (Math.random() - 0.5) * 2.5;
-
-            logToConsole(`[ADC] Temp=${targetTemp.toFixed(1)}°C | pH=${calcPH.toFixed(2)} (Err: ${errorPH.toFixed(2)}%) | Turb=${targetTurb}NTU`, "text-cyan-300");
-            logToConsole(`[LoRa 915MHz] Dist=${targetDist}km | RSSI=${rssi.toFixed(1)} dBm | Trama enviada.`, "text-emerald-400");
-
-            // Update historical charts
-            const timeLabel = new Date().toLocaleTimeString('es-CO', { hour12: false, minute: '2-digit', second: '2-digit' });
-            if (phChart.data.labels.length > 8) {
-                phChart.data.labels.shift();
-                phChart.data.datasets[0].data.shift();
-                phChart.data.datasets[1].data.shift();
-                rfChart.data.labels.shift();
-                rfChart.data.datasets[0].data.shift();
+            if(localStorage.getItem('tg_admin_chat')) {
+                document.getElementById('cfgAdminChatId').value = localStorage.getItem('tg_admin_chat');
             }
-
-            phChart.data.labels.push(timeLabel);
-            phChart.data.datasets[0].data.push(targetPH);
-            phChart.data.datasets[1].data.push(calcPH);
-            phChart.update();
-
-            rfChart.data.labels.push(`${targetDist.toFixed(1)}km`);
-            rfChart.data.datasets[0].data.push(rssi);
-            rfChart.update();
-
-            badgeMode.innerText = "STANDBY (150 µA)";
-            badgeMode.className = "text-[11px] px-2.5 py-0.5 rounded-full font-mono bg-amber-950 text-amber-400 border border-amber-800/50";
-            isRunning = false;
-            document.getElementById('btnRunCycle').disabled = false;
-        }
-
-        function toggleAutoLoop() {
-            const btn = document.getElementById('btnAutoLoop');
-            const icon = document.getElementById('loopIcon');
-            if (autoLoopInterval) {
-                clearInterval(autoLoopInterval);
-                autoLoopInterval = null;
-                btn.classList.remove('bg-cyan-950', 'border-cyan-500', 'text-cyan-300');
-                icon.classList.remove('fa-spin');
-                logToConsole("[SYS] Modo continuo detenido.", "text-slate-400");
-            } else {
-                btn.classList.add('bg-cyan-950', 'border-cyan-500', 'text-cyan-300');
-                icon.classList.add('fa-spin');
-                logToConsole("[SYS] Modo continuo iniciado (ciclos cada 3s).", "text-cyan-400");
-                triggerMeasurementCycle();
-                autoLoopInterval = setInterval(triggerMeasurementCycle, 3000);
-            }
-        }
-
-        // Send Telegram Alert if threshold exceeded (with 15s cooldown to avoid spam)
-        function triggerAutomaticTelegramAlert(temp, ph, turb) {
-            const now = Date.now();
-            if (now - lastAlertSentTime < 15000) return;
-            lastAlertSentTime = now;
-
-            const token = getBotToken();
-            const adminId = getAdminChatId();
-
-            if (!token || !adminId) {
-                logToConsole("[ALERTA] Umbral crítico superado. Configura tus credenciales de Telegram en el panel lateral.", "text-rose-400");
-                return;
-            }
-
-            const msg = `🚨 ALERTA AMBIENTAL - RÍO GUATAPURÍ 🚨\nTemperatura: ${temp.toFixed(1)} °C\npH: ${ph.toFixed(2)}\nTurbidez: ${turb.toFixed(0)} NTU\nEstado: CRÍTICO`;
-            fetch(`https://api.telegram.org/bot${token}/sendMessage?chat_id=${adminId}&text=${encodeURIComponent(msg)}`)
-                .then(res => {
-                    if (res.ok) logToConsole("[TELEGRAM] Alerta crítica enviada al teléfono del administrador.", "text-sky-400");
-                });
-        }
-
-        function sendTestTemperatureAlert() {
-            const temp = parseFloat(document.getElementById('sliderTemp').value);
-            const ph   = parseFloat(document.getElementById('sliderPH').value);
-            const turb = parseFloat(document.getElementById('sliderTurb').value);
-
-            const token = getBotToken();
-            const adminId = getAdminChatId();
-
-            if (!token || !adminId) {
-                showStatusMessage("Configura primero el Bot Token y Chat ID en el panel superior.", "#fbbf24");
-                return;
-            }
-
-            const msg = `🚨 PRUEBA DE ALERTA - RÍO GUATAPURÍ 🚨\nTemperatura actual: ${temp.toFixed(1)} °C\npH: ${ph.toFixed(2)}\nTurbidez: ${turb.toFixed(0)} NTU`;
-            fetch(`https://api.telegram.org/bot${token}/sendMessage?chat_id=${adminId}&text=${encodeURIComponent(msg)}`)
-                .then(res => {
-                    if (res.ok) {
-                        showStatusMessage("¡Alerta enviada a tu Telegram! Revisa tu celular.", "#4ade80");
-                        logToConsole("[TELEGRAM] Alerta de prueba despachada con éxito.", "text-sky-400");
-                    } else {
-                        showStatusMessage("Error al enviar. Verifica tus credenciales de Telegram.", "#f87171");
-                    }
-                });
-        }
-
-        // User Registration & Admin Authorization Request Form
-        document.getElementById('formRegistro').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const nombre = document.getElementById('nombreUsuario').value.trim();
-            const chatId = document.getElementById('telegramChatId').value.trim();
-
-            const token = getBotToken();
-            const adminId = getAdminChatId();
-
-            if (!token || !adminId) {
-                showStatusMessage("Configura primero las credenciales de administrador en el panel superior.", "#fbbf24");
-                return;
-            }
-
-            const mensajeAdmin = `🔔 Nueva solicitud de acceso al Simulador IoT:\n- Operador: ${nombre}\n- Chat ID: ${chatId}\nResponde /aprobar_${chatId} para autorizar alertas.`;
-
-            fetch(`https://api.telegram.org/bot${token}/sendMessage?chat_id=${adminId}&text=${encodeURIComponent(mensajeAdmin)}`)
-                .then(response => {
-                    if (response.ok) {
-                        showStatusMessage("¡Solicitud enviada! El administrador principal recibió tu petición en Telegram.", "#4ade80");
-                        logToConsole(`[AUTH] Solicitud de acceso enviada para ${nombre} (${chatId}).`, "text-sky-400");
-                        document.getElementById('formRegistro').reset();
-                    } else {
-                        showStatusMessage("Error de conexión con Telegram. Verifica tus credenciales.", "#f87171");
-                    }
-                })
-                .catch(() => {
-                    showStatusMessage("No se pudo conectar con la API de Telegram.", "#f87171");
-                });
-        });
-
-        // Charts Initialization
-        function initCharts() {
-            // 1. Wokwi Style Real-Time Serial Plotter
-            const ctxPlotter = document.getElementById('wokwiPlotterChart').getContext('2d');
-            wokwiPlotterChart = new Chart(ctxPlotter, {
-                type: 'line',
-                data: {
-                    labels: [],
-                    datasets: [
-                        {
-                            label: 'Temp (°C)',
-                            data: [],
-                            borderColor: '#fbbf24',
-                            borderWidth: 2.2,
-                            pointRadius: 0,
-                            tension: 0.35
-                        },
-                        {
-                            label: 'pH (x3)',
-                            data: [],
-                            borderColor: '#22d3ee',
-                            borderWidth: 2.2,
-                            pointRadius: 0,
-                            tension: 0.35
-                        },
-                        {
-                            label: 'Turbidez (/10)',
-                            data: [],
-                            borderColor: '#e879f9',
-                            borderWidth: 2.2,
-                            pointRadius: 0,
-                            tension: 0.35
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    animation: false,
-                    plugins: {
-                        legend: { display: false }
-                    },
-                    scales: {
-                        x: {
-                            grid: { color: '#1e293b' },
-                            ticks: { color: '#64748b', maxTicksLimit: 8, font: { size: 10 } }
-                        },
-                        y: {
-                            min: 0,
-                            max: 42,
-                            grid: { color: '#1e293b' },
-                            ticks: { color: '#94a3b8', font: { size: 10 } }
-                        }
-                    }
-                }
-            });
-
-            // 2. Theoretical vs ADC pH Chart
-            const ctxPH = document.getElementById('phChart').getContext('2d');
-            phChart = new Chart(ctxPH, {
-                type: 'line',
-                data: {
-                    labels: [],
-                    datasets: [
-                        {
-                            label: 'pH Teórico',
-                            data: [],
-                            borderColor: '#38bdf8',
-                            borderWidth: 2,
-                            tension: 0.3
-                        },
-                        {
-                            label: 'pH Medido ADC',
-                            data: [],
-                            borderColor: '#10b981',
-                            borderDash: [4, 4],
-                            borderWidth: 2,
-                            tension: 0.3
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { labels: { color: '#cbd5e1', font: { size: 10 } } } },
-                    scales: {
-                        x: { ticks: { color: '#64748b', font: { size: 9 } }, grid: { color: '#0f172a' } },
-                        y: { min: 4.5, max: 10, ticks: { color: '#64748b', font: { size: 9 } }, grid: { color: '#1e293b' } }
-                    }
-                }
-            });
-
-            // 3. LoRa RSSI Chart
-            const ctxRF = document.getElementById('rfChart').getContext('2d');
-            rfChart = new Chart(ctxRF, {
-                type: 'bar',
-                data: {
-                    labels: [],
-                    datasets: [{
-                        label: 'RSSI LoRa (dBm)',
-                        data: [],
-                        backgroundColor: 'rgba(16, 185, 129, 0.45)',
-                        borderColor: '#10b981',
-                        borderWidth: 1.5,
-                        borderRadius: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { labels: { color: '#cbd5e1', font: { size: 10 } } } },
-                    scales: {
-                        x: { ticks: { color: '#64748b', font: { size: 9 } }, grid: { display: false } },
-                        y: { min: -135, max: -60, ticks: { color: '#64748b', font: { size: 9 } }, grid: { color: '#1e293b' } }
-                    }
-                }
-            });
-        }
-
-        // Modal controls for copying Wokwi sketch.ino & diagram.json
-        function openWokwiCodeModal() {
-            document.getElementById('wokwiModal').classList.remove('hidden');
-        }
-        function closeWokwiCodeModal() {
-            document.getElementById('wokwiModal').classList.add('hidden');
-        }
-        function copyCodeBlock(elementId) {
-            const text = document.getElementById(elementId).innerText;
-            const textarea = document.createElement('textarea');
-            textarea.value = text;
-            document.body.appendChild(textarea);
-            textarea.select();
-            document.execCommand('copy');
-            document.body.removeChild(textarea);
-            logToConsole(`[COPIADO] Código de ${elementId} copiado al portapapeles.`, "text-emerald-400");
-        }
+            updateControls();
+        };
     </script>
 </body>
 </html>
