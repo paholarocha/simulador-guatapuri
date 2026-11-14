@@ -321,6 +321,16 @@
                 </form>
 
                 <p id="mensajeEstado" class="mt-3 text-xs font-medium text-center min-h-[18px]"></p>
+
+                <!-- Panel Admin: Operadores Pendientes de Aprobación -->
+                <div class="mt-4 bg-slate-950/90 border border-slate-800 rounded-xl p-3 text-xs">
+                    <div class="font-semibold text-emerald-400 flex items-center gap-2 mb-2">
+                        <i class="fa-solid fa-users-gear"></i> Panel Admin: Operadores Pendientes
+                    </div>
+                    <div id="listaPendientes" class="space-y-2 text-slate-300">
+                        <span class="text-slate-500 italic">No hay solicitudes pendientes.</span>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
@@ -341,7 +351,7 @@
         let loopInterval = null;
         let estadoAnterior = ""; 
 
-        // Lista de chats autorizados (Incluye por defecto al Administrador principal) y pendientes
+        // Listas de autorizados y pendientes almacenadas en el navegador
         let chatsAutorizados = JSON.parse(localStorage.getItem('tg_chats_autorizados')) || ["9095901651"];
         let pendientesAutorizacion = JSON.parse(localStorage.getItem('tg_pendientes')) || [];
 
@@ -451,7 +461,7 @@
             }
             lcdLine2.innerText = estadoActual;
 
-            // Detectar cambios de estado (incluyendo normalización/lluvia) y difundir a todos
+            // Detectar cambios de estado y difundir a todos los autorizados
             if (estadoActual !== estadoAnterior) {
                 if (estadoAnterior !== "") { 
                     let iconoReporte = "🌊";
@@ -544,19 +554,25 @@
                 return;
             }
 
-            pendientesAutorizacion.push({ nombre, chatId: chatIdNuevo });
-            localStorage.setItem('tg_pendientes', JSON.stringify(pendientesAutorizacion));
+            // Verificar si ya está en pendientes
+            const yaPendiente = pendientesAutorizacion.some(op => op.chatId === chatIdNuevo);
+            if (!yaPendiente) {
+                pendientesAutorizacion.push({ nombre, chatId: chatIdNuevo });
+                localStorage.setItem('tg_pendientes', JSON.stringify(pendientesAutorizacion));
+            }
+
+            actualizarPanelPendientes();
 
             const token = getBotToken();
             const adminChatId = "9095901651"; // Tu Chat ID de Administrador Principal
-            const mensajeAdmin = `🔒 SOLICITUD DE NUEVO OPERADOR\n• Nombre: ${nombre}\n• Chat ID: ${chatIdNuevo}\n\nEste usuario ha solicitado acceso al sistema de telemetría del Río Guatapurí.`;
+            const mensajeAdmin = `🔒 SOLICITUD DE NUEVO OPERADOR\n• Nombre: ${nombre}\n• Chat ID: ${chatIdNuevo}\n\nEste usuario ha solicitado acceso. Entra al panel web para aprobarlo.`;
             
             fetch(`https://api.telegram.org/bot${token}/sendMessage?chat_id=${adminChatId}&text=${encodeURIComponent(mensajeAdmin)}`)
                 .then(res => res.json())
                 .then(data => {
                     if(data.ok) {
                         msg.className = "mt-3 text-xs font-medium text-center text-amber-400";
-                        msg.innerText = `Solicitud enviada con éxito. Pendiente de aprobación del Administrador.`;
+                        msg.innerText = `Solicitud enviada. Pendiente de aprobación en el panel.`;
                         agregarLog(`[Telegram] Solicitud de acceso enviada para ${nombre} (Chat ID: ${chatIdNuevo})`);
                     } else {
                         msg.className = "mt-3 text-xs font-medium text-center text-rose-400";
@@ -567,6 +583,55 @@
                     msg.className = "mt-3 text-xs font-medium text-center text-rose-400";
                     msg.innerText = `Error de red al enviar la solicitud de registro.`;
                 });
+        }
+
+        // Renderizar Panel de Pendientes
+        function actualizarPanelPendientes() {
+            const contenedor = document.getElementById('listaPendientes');
+            if (!contenedor) return;
+
+            if (pendientesAutorizacion.length === 0) {
+                contenedor.innerHTML = `<span class="text-slate-500 italic">No hay solicitudes pendientes.</span>`;
+                return;
+            }
+
+            contenedor.innerHTML = "";
+            pendientesAutorizacion.forEach((op, index) => {
+                contenedor.innerHTML += `
+                    <div class="flex items-center justify-between bg-slate-900 p-2 rounded-lg border border-slate-800">
+                        <div>
+                            <span class="font-bold text-white">${op.nombre}</span><br>
+                            <span class="font-mono text-[10px] text-slate-400">ID: ${op.chatId}</span>
+                        </div>
+                        <button type="button" onclick="aprobarOperador(${index})" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold rounded text-[11px] transition cursor-pointer">
+                            Aprobar
+                        </button>
+                    </div>
+                `;
+            });
+        }
+
+        // Aprobar operador desde el panel web
+        function aprobarOperador(index) {
+            const operador = pendientesAutorizacion[index];
+            
+            if (!chatsAutorizados.includes(operador.chatId)) {
+                chatsAutorizados.push(operador.chatId);
+                localStorage.setItem('tg_chats_autorizados', JSON.stringify(chatsAutorizados));
+            }
+
+            pendientesAutorizacion.splice(index, 1);
+            localStorage.setItem('tg_pendientes', JSON.stringify(pendientesAutorizacion));
+
+            actualizarPanelPendientes();
+            agregarLog(`[Admin] Operador ${operador.nombre} (${operador.chatId}) autorizado con éxito.`);
+
+            // Notificar al usuario aprobado en su Telegram
+            const token = getBotToken();
+            const mensajeAprobado = `🎉 ¡Hola ${operador.nombre}! Tu acceso al sistema de telemetría del Río Guatapurí ha sido aprobado. Ya estás recibiendo las alertas en tiempo real.`;
+            fetch(`https://api.telegram.org/bot${token}/sendMessage?chat_id=${operador.chatId}&text=${encodeURIComponent(mensajeAprobado)}`);
+            
+            alert(`¡Operador ${operador.nombre} aprobado correctamente!`);
         }
 
         function clearConsole() {
@@ -582,7 +647,7 @@
         sliderPH.addEventListener('input', updateControls);
         sliderTurb.addEventListener('input', updateControls);
 
-        // Cargar credenciales guardadas y ejecutar ciclo inicial al cargar la página
+        // Cargar credenciales guardadas, panel y ejecutar ciclo inicial al cargar la página
         window.onload = function() {
             if(localStorage.getItem('tg_bot_token')) {
                 document.getElementById('cfgBotToken').value = localStorage.getItem('tg_bot_token');
@@ -590,6 +655,7 @@
             if(localStorage.getItem('tg_admin_chat')) {
                 document.getElementById('cfgAdminChatId').value = localStorage.getItem('tg_admin_chat');
             }
+            actualizarPanelPendientes();
             updateControls();
         };
     </script>
