@@ -348,32 +348,32 @@
                     <h3 class="text-sm font-bold uppercase tracking-wider text-slate-200 flex items-center gap-2">
                         <i class="fa-brands fa-telegram text-sky-400 text-lg"></i> Centro de Alertas & Suscripción Telegram
                     </h3>
-                    <span class="text-[11px] px-2 py-0.5 rounded bg-sky-950 text-sky-400 border border-sky-800/60 font-mono">API Bot Activa</span>
+                    <span class="text-[11px] px-2 py-0.5 rounded bg-sky-950 text-sky-400 border border-sky-800/60 font-mono">API Bot Segura</span>
                 </div>
 
                 <p class="text-xs text-slate-400 mb-4 leading-relaxed">
-                    Regístrate como operador del nodo para recibir alertas críticas de temperatura (> 29°C) o pH en tu celular. Toda solicitud requiere autorización del administrador principal.
+                    Configura tus credenciales de administrador una sola vez de forma privada y regístrate como operador para recibir alertas críticas del Río Guatapurí.
                 </p>
 
-                <!-- Bot Configuration Accordion (Optional quick setup for demo) -->
-                <details class="mb-4 bg-slate-950/90 border border-slate-800 rounded-xl p-3 text-xs">
-                    <summary class="cursor-pointer font-semibold text-cyan-400 flex items-center gap-2">
+                <!-- Bot Configuration Section (Secure Local Storage) -->
+                <div class="mb-4 bg-slate-950/90 border border-slate-800 rounded-xl p-3 text-xs">
+                    <div class="font-semibold text-cyan-400 flex items-center gap-2 mb-2">
                         <i class="fa-solid fa-gear"></i> Configurar Credenciales Bot Telegram (Admin)
-                    </summary>
-                    <div class="mt-3 space-y-2.5">
+                    </div>
+                    <div class="space-y-2.5">
                         <div>
                             <label class="block text-[11px] text-slate-400 mb-1">Bot Token (@BotFather):</label>
-                            <input type="text" id="cfgBotToken" placeholder="Ej: 123456789:ABCdefGhIJKlmNoPQRs..." class="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-slate-200 font-mono text-xs focus:border-cyan-500 focus:outline-none">
+                            <input type="password" id="cfgBotToken" placeholder="Ej: 123456789:ABCdefGhIJKlmNoPQRs..." class="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-slate-200 font-mono text-xs focus:border-cyan-500 focus:outline-none">
                         </div>
                         <div>
-                            <label class="block text-[11px] text-slate-400 mb-1">Chat ID Administrador Principal (@userinfobot):</label>
-                            <input type="text" id="cfgAdminChatId" placeholder="Ej: 987654321" class="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-slate-200 font-mono text-xs focus:border-cyan-500 focus:outline-none">
+                            <label class="block text-[11px] text-slate-400 mb-1">Chat ID Administrador Principal:</label>
+                            <input type="text" id="cfgAdminChatId" placeholder="Ej: 7787186027" class="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-slate-200 font-mono text-xs focus:border-cyan-500 focus:outline-none">
                         </div>
                         <button type="button" onclick="saveTelegramConfig()" class="w-full py-1.5 bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-bold rounded-lg text-xs transition">
-                            Guardar Credenciales en Sesión
+                            Guardar Credenciales en Sesión Segura
                         </button>
                     </div>
-                </details>
+                </div>
 
                 <!-- Registration Form -->
                 <form id="formRegistro" class="space-y-3">
@@ -552,9 +552,13 @@ void loop() {
         let plotterInterval = null;
         let lastAlertSentTime = 0;
 
-        // Default or user-configured Telegram credentials
-        let telegramBotToken = "TU_BOT_TOKEN";
-        let telegramAdminId = "TU_CHAT_ID_ADMIN_PRINCIPAL";
+        // Credentials managed securely via browser localStorage (No hardcoded secrets)
+        function getBotToken() {
+            return localStorage.getItem('nt_bot_token') || "";
+        }
+        function getAdminChatId() {
+            return localStorage.getItem('nt_admin_id') || "";
+        }
 
         const presets = {
             clean:  { ph: 7.05, turb: 12,  temp: 24.5, dist: 3.5 },
@@ -568,6 +572,14 @@ void loop() {
             initCharts();
             updateControls();
             startRealtimePlotter();
+
+            // Pre-fill fields if stored locally
+            if(localStorage.getItem('nt_bot_token')) {
+                document.getElementById('cfgBotToken').value = localStorage.getItem('nt_bot_token');
+            }
+            if(localStorage.getItem('nt_admin_id')) {
+                document.getElementById('cfgAdminChatId').value = localStorage.getItem('nt_admin_id');
+            }
         };
 
         function updateWokwiIframe() {
@@ -582,10 +594,12 @@ void loop() {
             const token = document.getElementById('cfgBotToken').value.trim();
             const adminId = document.getElementById('cfgAdminChatId').value.trim();
             if (token && adminId) {
-                telegramBotToken = token;
-                telegramAdminId = adminId;
-                logToConsole("[TELEGRAM] Credenciales del Bot activadas para esta sesión.", "text-sky-400");
-                showStatusMessage("Credenciales guardadas. ¡Listo para recibir solicitudes de registro!", "#4ade80");
+                localStorage.setItem('nt_bot_token', token);
+                localStorage.setItem('nt_admin_id', adminId);
+                logToConsole("[TELEGRAM] Credenciales del Bot guardadas de forma segura en el navegador.", "text-sky-400");
+                showStatusMessage("¡Credenciales guardadas con éxito en sesión local!", "#4ade80");
+            } else {
+                showStatusMessage("Por favor ingresa un Token y un Chat ID válidos.", "#f87171");
             }
         }
 
@@ -788,13 +802,16 @@ void loop() {
             if (now - lastAlertSentTime < 15000) return;
             lastAlertSentTime = now;
 
-            if (telegramBotToken === "TU_BOT_TOKEN" || telegramAdminId === "TU_CHAT_ID_ADMIN_PRINCIPAL") {
-                logToConsole("[ALERTA] Umbral crítico superado. Configura tu Bot Token abajo para recibir el aviso en Telegram.", "text-rose-400");
+            const token = getBotToken();
+            const adminId = getAdminChatId();
+
+            if (!token || !adminId) {
+                logToConsole("[ALERTA] Umbral crítico superado. Configura tus credenciales de Telegram en el panel lateral.", "text-rose-400");
                 return;
             }
 
             const msg = `🚨 ALERTA AMBIENTAL - RÍO GUATAPURÍ 🚨\nTemperatura: ${temp.toFixed(1)} °C\npH: ${ph.toFixed(2)}\nTurbidez: ${turb.toFixed(0)} NTU\nEstado: CRÍTICO`;
-            fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage?chat_id=${telegramAdminId}&text=${encodeURIComponent(msg)}`)
+            fetch(`https://api.telegram.org/bot${token}/sendMessage?chat_id=${adminId}&text=${encodeURIComponent(msg)}`)
                 .then(res => {
                     if (res.ok) logToConsole("[TELEGRAM] Alerta crítica enviada al teléfono del administrador.", "text-sky-400");
                 });
@@ -805,19 +822,22 @@ void loop() {
             const ph   = parseFloat(document.getElementById('sliderPH').value);
             const turb = parseFloat(document.getElementById('sliderTurb').value);
 
-            if (telegramBotToken === "TU_BOT_TOKEN" || telegramAdminId === "TU_CHAT_ID_ADMIN_PRINCIPAL") {
-                showStatusMessage("Abre 'Configurar Credenciales Bot Telegram' arriba e ingresa tu Token y Chat ID.", "#fbbf24");
+            const token = getBotToken();
+            const adminId = getAdminChatId();
+
+            if (!token || !adminId) {
+                showStatusMessage("Configura primero el Bot Token y Chat ID en el panel superior.", "#fbbf24");
                 return;
             }
 
             const msg = `🚨 PRUEBA DE ALERTA - RÍO GUATAPURÍ 🚨\nTemperatura actual: ${temp.toFixed(1)} °C\npH: ${ph.toFixed(2)}\nTurbidez: ${turb.toFixed(0)} NTU`;
-            fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage?chat_id=${telegramAdminId}&text=${encodeURIComponent(msg)}`)
+            fetch(`https://api.telegram.org/bot${token}/sendMessage?chat_id=${adminId}&text=${encodeURIComponent(msg)}`)
                 .then(res => {
                     if (res.ok) {
                         showStatusMessage("¡Alerta enviada a tu Telegram! Revisa tu celular.", "#4ade80");
                         logToConsole("[TELEGRAM] Alerta de prueba despachada con éxito.", "text-sky-400");
                     } else {
-                        showStatusMessage("Error al enviar. Verifica que el Token y Chat ID sean válidos.", "#f87171");
+                        showStatusMessage("Error al enviar. Verifica tus credenciales de Telegram.", "#f87171");
                     }
                 });
         }
@@ -828,14 +848,17 @@ void loop() {
             const nombre = document.getElementById('nombreUsuario').value.trim();
             const chatId = document.getElementById('telegramChatId').value.trim();
 
-            if (telegramBotToken === "TU_BOT_TOKEN" || telegramAdminId === "TU_CHAT_ID_ADMIN_PRINCIPAL") {
-                showStatusMessage("Configura primero el Token y Chat ID del administrador en la pestaña superior.", "#fbbf24");
+            const token = getBotToken();
+            const adminId = getAdminChatId();
+
+            if (!token || !adminId) {
+                showStatusMessage("Configura primero las credenciales de administrador en el panel superior.", "#fbbf24");
                 return;
             }
 
             const mensajeAdmin = `🔔 Nueva solicitud de acceso al Simulador IoT:\n- Operador: ${nombre}\n- Chat ID: ${chatId}\nResponde /aprobar_${chatId} para autorizar alertas.`;
 
-            fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage?chat_id=${telegramAdminId}&text=${encodeURIComponent(mensajeAdmin)}`)
+            fetch(`https://api.telegram.org/bot${token}/sendMessage?chat_id=${adminId}&text=${encodeURIComponent(mensajeAdmin)}`)
                 .then(response => {
                     if (response.ok) {
                         showStatusMessage("¡Solicitud enviada! El administrador principal recibió tu petición en Telegram.", "#4ade80");
