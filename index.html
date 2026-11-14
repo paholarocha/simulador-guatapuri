@@ -522,7 +522,7 @@ function enviarNotificacionTelegram(mensaje) {
             }
         }
 
-     // Lógica para solicitar autorización al Administrador principal
+// Lógica para solicitar autorización al Administrador principal
 function handleRegistration(e) {
     e.preventDefault();
     const nombre = document.getElementById('nombreUsuario').value.trim();
@@ -534,6 +534,30 @@ function handleRegistration(e) {
         msg.innerText = `¡El operador ${nombre} ya se encuentra autorizado!`;
         return;
     }
+
+    pendientesAutorizacion.push({ nombre, chatId: chatIdNuevo });
+    localStorage.setItem('tg_pendientes', JSON.stringify(pendientesAutorizacion));
+
+    const token = getBotToken();
+    const adminChatId = "9095901651"; // Tu ID de Administrador
+    const mensajeAdmin = `🔒 SOLICITUD DE NUEVO OPERADOR\n• Nombre: ${nombre}\n• Chat ID: ${chatIdNuevo}\n\nEste usuario ha solicitado acceso al sistema de telemetría.`;
+
+    fetch(`https://api.telegram.org/bot${token}/sendMessage?chat_id=${adminChatId}&text=${encodeURIComponent(mensajeAdmin)}`)
+        .then(res => res.json())
+        .then(data => {
+            if(data.ok) {
+                msg.className = "mt-3 text-xs font-medium text-center text-amber-400";
+                msg.innerText = `Solicitud enviada. Pendiente de aprobación del Administrador.`;
+            } else {
+                msg.className = "mt-3 text-xs font-medium text-center text-rose-400";
+                msg.innerText = `Error al notificar al administrador.`;
+            }
+        })
+        .catch(err => {
+            msg.className = "mt-3 text-xs font-medium text-center text-rose-400";
+            msg.innerText = `Error de red al enviar la solicitud.`;
+        });
+}
 
     pendientesAutorizacion.push({ nombre, chatId: chatIdNuevo });
     localStorage.setItem('tg_pendientes', JSON.stringify(pendientesAutorizacion));
