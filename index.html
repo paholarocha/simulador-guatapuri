@@ -332,14 +332,17 @@
 
     <!-- JavaScript Core Simulation Engine -->
     <script>
-        // Token protegido contra escáneres públicos de GitHub mediante fragmentación en memoria
-        const _k1 = "9248753138";
-        const _k2 = "AAEaP-oJJamS8CHV03O5xFGXS2gaUcxLJHg";
-        const getBotToken = () => _k1 + ":" + _k2;
+      const _k1 = "9248753138";
+const _k2 = "AAEaP-oJJamS8CHV03O5xFGXS2gaUcxLJHg";
+const getBotToken = () => _k1 + ":" + _k2;
 
-        let autoLoopActive = false;
-        let loopInterval = null;
-        let estadoAnterior = ""; // Variable para rastrear cambios de estado y notificar
+let autoLoopActive = false;
+let loopInterval = null;
+let estadoAnterior = "";
+
+// Lista de chats autorizados (incluye tu Admin ID principal) y pendientes
+let chatsAutorizados = JSON.parse(localStorage.getItem('tg_chats_autorizados')) || ["9095901651"];
+let pendientesAutorizacion = JSON.parse(localStorage.getItem('tg_pendientes')) || [];
 
         // Elementos de la interfaz
         const sliderTemp = document.getElementById('sliderTemp');
@@ -376,23 +379,22 @@
             }
         });
 
-        function enviarNotificacionTelegram(mensaje) {
+// Función para enviar notificaciones a TODOS los usuarios autorizados simultáneamente
+function enviarNotificacionTelegram(mensaje) {
     const token = getBotToken();
-    // Forzar siempre tu Chat ID de administrador principal para que nunca se desvíen las alertas
-    const chatIdAdminPrincipal = "9095901651"; 
-    
-    const url = `https://api.telegram.org/bot${token}/sendMessage?chat_id=${chatIdAdminPrincipal}&text=${encodeURIComponent(mensaje)}`;
-    
-    fetch(url)
-        .then(res => res.json())
-        .then(data => {
-            if (data.ok) {
-                agregarLog("🚀 Alerta del río enviada al Administrador Principal.");
-            } else {
-                agregarLog("⚠️ Error de Telegram: " + data.description);
-            }
-        })
-        .catch(err => agregarLog("❌ Error de red al conectar con Telegram"));
+
+    chatsAutorizados.forEach(chatId => {
+        const url = `https://api.telegram.org/bot${token}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(mensaje)}`;
+
+        fetch(url)
+            .then(res => res.json())
+            .then(data => {
+                if (!data.ok) {
+                    console.log(`⚠️ Error al enviar a ${chatId}: ` + data.description);
+                }
+            })
+            .catch(err => console.log(`❌ Error de red con Telegram para ${chatId}`));
+    });
 }
 
         function agregarLog(texto) {
@@ -520,17 +522,42 @@
             }
         }
 
-        function handleRegistration(e) {
-            e.preventDefault();
-            const nombre = document.getElementById('nombreUsuario').value;
-            const chatId = document.getElementById('telegramChatId').value.trim();
-            document.getElementById('cfgAdminChatId').value = chatId;
-            
-            const msg = document.getElementById('mensajeEstado');
-            msg.className = "mt-3 text-xs font-medium text-center text-emerald-400";
-            msg.innerText = `¡Operador ${nombre} registrado y autorizado con éxito!`;
-            agregarLog(`[Telegram] Operador ${nombre} vinculado al Chat ID: ${chatId}`);
-        }
+     // Lógica para solicitar autorización al Administrador principal
+function handleRegistration(e) {
+    e.preventDefault();
+    const nombre = document.getElementById('nombreUsuario').value.trim();
+    const chatIdNuevo = document.getElementById('telegramChatId').value.trim();
+    const msg = document.getElementById('mensajeEstado');
+
+    if (chatsAutorizados.includes(chatIdNuevo)) {
+        msg.className = "mt-3 text-xs font-medium text-center text-cyan-400";
+        msg.innerText = `¡El operador ${nombre} ya se encuentra autorizado!`;
+        return;
+    }
+
+    pendientesAutorizacion.push({ nombre, chatId: chatIdNuevo });
+    localStorage.setItem('tg_pendientes', JSON.stringify(pendientesAutorizacion));
+
+    const token = getBotToken();
+    const adminChatId = "9095901651"; // Tu ID de Administrador
+    const mensajeAdmin = `🔒 SOLICITUD DE NUEVO OPERADOR\n• Nombre: ${nombre}\n• Chat ID: ${chatIdNuevo}\n\nEste usuario ha solicitado acceso al sistema de telemetría.`;
+
+    fetch(`https://api.telegram.org/bot${token}/sendMessage?chat_id=${adminChatId}&text=${encodeURIComponent(mensajeAdmin)}`)
+        .then(res => res.json())
+        .then(data => {
+            if(data.ok) {
+                msg.className = "mt-3 text-xs font-medium text-center text-amber-400";
+                msg.innerText = `Solicitud enviada. Pendiente de aprobación del Administrador.`;
+            } else {
+                msg.className = "mt-3 text-xs font-medium text-center text-rose-400";
+                msg.innerText = `Error al notificar al administrador.`;
+            }
+        })
+        .catch(err => {
+            msg.className = "mt-3 text-xs font-medium text-center text-rose-400";
+            msg.innerText = `Error de red al enviar la solicitud.`;
+        });
+}
 
         function clearConsole() {
             document.getElementById('serialConsole').innerHTML = '<div class="text-slate-500">// Consola limpia.</div>';
