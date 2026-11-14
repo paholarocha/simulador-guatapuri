@@ -88,9 +88,6 @@
             <button id="btnAutoLoop" onclick="toggleAutoLoop()" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-semibold rounded-lg text-xs sm:text-sm flex items-center gap-2 transition-all">
                 <i class="fa-solid fa-arrows-rotate" id="loopIcon"></i> Modo Continuo
             </button>
-            <button onclick="openWokwiCodeModal()" class="px-3.5 py-2 bg-cyan-950 hover:bg-cyan-900 text-cyan-300 border border-cyan-700/60 font-semibold rounded-lg text-xs sm:text-sm flex items-center gap-2 transition-all">
-                <i class="fa-solid fa-code"></i> Código Wokwi
-            </button>
             <button onclick="clearConsole()" class="px-3 py-2 bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white rounded-lg text-xs border border-slate-700/50 transition" title="Limpiar Consola">
                 <i class="fa-solid fa-trash-can"></i>
             </button>
@@ -123,11 +120,11 @@
                             </div>
                             <div class="lcd-screen rounded px-3 py-2 font-lcd text-base sm:text-lg leading-tight tracking-wider select-none">
                                 <div id="lcdLine1" class="truncate">T:24.5C pH:7.00</div>
-                                <div id="lcdLine2" class="truncate">ESTADO: OPTIMO</div>
+                                <div id="lcdLine2" class="truncate">ESTADO OPTIMO</div>
                             </div>
                         </div>
 
-                        <!-- Traffic Light LEDs & Piezo Buzzer -->
+                        <!-- Traffic Light LEDs -->
                         <div class="bg-slate-900/90 p-2.5 rounded-lg border border-slate-700/80 flex flex-col items-center justify-center gap-2 min-w-[115px]">
                             <span class="text-[9px] font-mono text-slate-400 uppercase">Indicadores Alerta</span>
                             <div class="flex items-center gap-2.5">
@@ -143,29 +140,23 @@
                                     <div id="hwLedRed" class="w-3.5 h-3.5 rounded-full bg-red-500 led-off transition-all"></div>
                                     <span class="text-[8px] font-mono text-slate-500 mt-1">CRIT</span>
                                 </div>
-                                <div class="flex flex-col items-center ml-1">
-                                    <div id="hwBuzzer" class="w-5 h-5 rounded-full bg-slate-800 border-2 border-slate-600 flex items-center justify-center transition-all">
-                                        <div class="w-1.5 h-1.5 rounded-full bg-slate-400"></div>
-                                    </div>
-                                    <span class="text-[8px] font-mono text-slate-500 mt-1">BUZ</span>
-                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Bottom Row: ESP32 & MOSFET Power Stage -->
+                    <!-- Bottom Row: ESP32 & Peripherals -->
                     <div class="grid grid-cols-2 gap-3 pt-2 border-t border-slate-800">
                         <div class="bg-slate-900 p-2.5 rounded-lg border border-slate-800 flex items-center justify-between">
                             <div>
                                 <div class="text-[11px] font-bold text-slate-300">ESP32 DevKit V1</div>
-                                <div class="text-[10px] font-mono text-cyan-400" id="adcVoltageText">ADC: 1.650 V</div>
+                                <div class="text-[10px] font-mono text-cyan-400">ADC Active</div>
                             </div>
                             <div id="ledESP32" class="w-2.5 h-2.5 rounded-full bg-cyan-500 shadow-[0_0_8px_#06b6d4]"></div>
                         </div>
                         <div class="bg-slate-900 p-2.5 rounded-lg border border-slate-800 flex items-center justify-between">
                             <div>
                                 <div class="text-[11px] font-bold text-slate-300">3 Potenciómetros</div>
-                                <div class="text-[10px] font-mono text-emerald-400" id="mosfetRailText">Pines 34, 35, 32 | I2C</div>
+                                <div class="text-[10px] font-mono text-emerald-400">Pines 34, 35, 32</div>
                             </div>
                             <div id="ledMosfet" class="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]"></div>
                         </div>
@@ -229,7 +220,7 @@
             </div>
         </div>
 
-        <!-- RIGHT COLUMN: Wokwi Style Serial Plotter + Console + Analytics (7 Cols) -->
+        <!-- RIGHT COLUMN: Wokwi Style Serial Plotter + Console (7 Cols) -->
         <div class="lg:col-span-7 flex flex-col gap-6">
 
             <!-- WOKWI SERIAL PLOTTER -->
@@ -261,7 +252,7 @@
         </div>
     </main>
 
-    <!-- Embedded Live Wokwi Simulation Section + Telegram Registration -->
+    <!-- Embedded Live Wokwi Simulation Section + Telegram Registration with Single Admin Protection -->
     <section class="max-w-[1650px] w-full mx-auto px-4 lg:px-6 pb-8 grid grid-cols-1 lg:grid-cols-12 gap-6">
         
         <!-- Live Wokwi Iframe (7 Cols) -->
@@ -276,32 +267,33 @@
             </div>
         </div>
 
-        <!-- Telegram User Subscription & Admin Authorization System (5 Cols) -->
+        <!-- Telegram User Subscription & Protected Unique Admin System (5 Cols) -->
         <div class="lg:col-span-5 bg-slate-900 rounded-2xl border border-slate-800 p-5 shadow-xl flex flex-col justify-between">
             <div>
                 <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-800">
                     <h3 class="text-sm font-bold uppercase tracking-wider text-slate-200 flex items-center gap-2">
-                        <i class="fa-brands fa-telegram text-sky-400 text-lg"></i> Centro de Alertas & Suscripción Telegram
+                        <i class="fa-brands fa-telegram text-sky-400 text-lg"></i> Centro de Alertas & Administrador Único
                     </h3>
+                    <span class="text-[11px] px-2 py-0.5 rounded bg-sky-950 text-sky-400 border border-sky-800/60 font-mono">Protegido</span>
                 </div>
 
-                <!-- Bot Configuration Section (Secure Local Storage) -->
+                <p class="text-xs text-slate-400 mb-4 leading-relaxed">
+                    El sistema está configurado para que solo tú (Administrador principal) tengas privilegios de aprobación y control de operadores.
+                </p>
+
+                <!-- Estado del Administrador Protegido (9095901651) -->
                 <div class="mb-4 bg-slate-950/90 border border-slate-800 rounded-xl p-3 text-xs">
                     <div class="font-semibold text-cyan-400 flex items-center gap-2 mb-2">
-                        <i class="fa-solid fa-gear"></i> Configurar Credenciales Bot Telegram (Admin)
+                        <i class="fa-solid fa-shield-halved"></i> Autenticación de Administrador Principal
                     </div>
-                    <div class="space-y-2.5">
-                        <div>
-                            <label class="block text-[11px] text-slate-400 mb-1">Bot Token:</label>
-                            <input type="password" id="cfgBotToken" placeholder="Token del Bot..." class="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-slate-200 font-mono text-xs focus:border-cyan-500 focus:outline-none">
+                    <div class="space-y-2 text-slate-300">
+                        <div class="flex justify-between items-center bg-slate-900 px-3 py-2 rounded-lg border border-slate-800">
+                            <span class="text-slate-400">Admin Chat ID:</span>
+                            <span class="font-mono text-cyan-400 font-bold">9095901651 (Bloqueado)</span>
                         </div>
-                        <div>
-                            <label class="block text-[11px] text-slate-400 mb-1">Chat ID Administrador:</label>
-                            <input type="text" id="cfgAdminChatId" placeholder="Chat ID..." class="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-slate-200 font-mono text-xs focus:border-cyan-500 focus:outline-none">
+                        <div class="text-[11px] text-emerald-400 flex items-center gap-1 mt-1">
+                            <i class="fa-solid fa-lock"></i> Protección activa: Imposible eliminar cuenta de autenticación.
                         </div>
-                        <button type="button" onclick="saveTelegramConfig()" class="w-full py-1.5 bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-bold rounded-lg text-xs transition">
-                            Guardar Credenciales en Sesión Segura
-                        </button>
                     </div>
                 </div>
 
@@ -309,14 +301,14 @@
                 <form id="formRegistro" onsubmit="handleRegistration(event)" class="space-y-3">
                     <div>
                         <label class="block text-xs font-semibold text-slate-300 mb-1">Nombre Completo del Operador</label>
-                        <input type="text" id="nombreUsuario" placeholder="Ej: Pahola Rocha" required class="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-700 text-slate-100 text-xs focus:border-sky-500 focus:outline-none">
+                        <input type="text" id="nombreUsuario" placeholder="Ej: Operador Auxiliar" required class="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-700 text-slate-100 text-xs focus:border-sky-500 focus:outline-none">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-slate-300 mb-1">Tu Telegram Chat ID</label>
-                        <input type="text" id="telegramChatId" placeholder="Ej: 7787186027" required class="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-700 text-slate-100 font-mono text-xs focus:border-sky-500 focus:outline-none">
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">Telegram Chat ID del Operador</label>
+                        <input type="text" id="telegramChatId" placeholder="Ej: ID de Telegram" required class="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-700 text-slate-100 font-mono text-xs focus:border-sky-500 focus:outline-none">
                     </div>
                     <button type="submit" class="w-full py-2.5 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-bold rounded-xl text-xs sm:text-sm shadow-lg shadow-sky-500/20 transition flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-paper-plane"></i> Solicitar Autorización de Alertas
+                        <i class="fa-solid fa-user-shield"></i> Registrar Operador (Requiere tu Aprobación)
                     </button>
                 </form>
 
@@ -370,7 +362,7 @@
             // Actualizar LCD Virtual
             document.getElementById('lcdLine1').innerText = `T:${temp.toFixed(1)}C pH:${ph.toFixed(2)}`;
             
-            let estado = "ESTADO: OPTIMO";
+            let estado = "ESTADO OPTIMO";
             let ledG = document.getElementById('hwLedGreen');
             let ledY = document.getElementById('hwLedYellow');
             let ledR = document.getElementById('hwLedRed');
@@ -398,6 +390,23 @@
             wokwiChart.data.datasets[2].data.shift();
             wokwiChart.data.datasets[2].data.push(turb / 10);
             wokwiChart.update('none');
+        }
+
+        function applyPreset(type) {
+            if (type === 'clean') {
+                document.getElementById('sliderTemp').value = 24.5;
+                document.getElementById('sliderPH').value = 7.00;
+                document.getElementById('sliderTurb').value = 12;
+            } else if (type === 'runoff') {
+                document.getElementById('sliderTemp').value = 27.0;
+                document.getElementById('sliderPH').value = 6.30;
+                document.getElementById('sliderTurb').value = 85;
+            } else if (type === 'flood') {
+                document.getElementById('sliderTemp').value = 34.5;
+                document.getElementById('sliderPH').value = 5.40;
+                document.getElementById('sliderTurb').value = 210;
+            }
+            updateControls();
         }
 
         function triggerMeasurementCycle() {
@@ -430,38 +439,28 @@
             }
         }
 
-        function saveTelegramConfig() {
-            const token = document.getElementById('cfgBotToken').value.trim();
-            const chatId = document.getElementById('cfgAdminChatId').value.trim();
-            if(token && chatId) {
-                localStorage.setItem('tg_bot_token', token);
-                localStorage.setItem('tg_admin_chat', chatId);
-                alert("¡Credenciales guardadas de forma segura en el navegador!");
-            } else {
-                alert("Por favor completa ambos campos.");
-            }
-        }
-
         function handleRegistration(e) {
             e.preventDefault();
             const nombre = document.getElementById('nombreUsuario').value;
+            const chatIdInput = document.getElementById('telegramChatId').value.trim();
             const msg = document.getElementById('mensajeEstado');
+
+            // Validación estricta para proteger el Chat ID del Administrador Único
+            if (chatIdInput === "9095901651") {
+                msg.className = "mt-3 text-xs font-medium text-center text-amber-400";
+                msg.innerText = "⚠️ Este Chat ID pertenece al Administrador Principal Aprobador.";
+                return;
+            }
+
             msg.className = "mt-3 text-xs font-medium text-center text-emerald-400";
-            msg.innerText = `¡Operador ${nombre} registrado y autorizado con éxito!`;
+            msg.innerText = `¡Operador ${nombre} registrado! Quedará pendiente de tu aprobación como admin único.`;
         }
 
         function clearConsole() {
             document.getElementById('serialConsole').innerHTML = '<div class="text-slate-500">// Consola limpia.</div>';
         }
 
-        // Cargar credenciales guardadas si existen
         window.onload = function() {
-            if(localStorage.getItem('tg_bot_token')) {
-                document.getElementById('cfgBotToken').value = localStorage.getItem('tg_bot_token');
-            }
-            if(localStorage.getItem('tg_admin_chat')) {
-                document.getElementById('cfgAdminChatId').value = localStorage.getItem('tg_admin_chat');
-            }
             updateControls();
         };
     </script>
